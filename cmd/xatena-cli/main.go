@@ -1,0 +1,12 @@
+/xatena
+    /parser
+        parser.go
+    /formatter
+        formatter.go
+    /inline
+        inline.go
+    /block
+        block.go
+    /utils
+        utils.go
+    main.go
