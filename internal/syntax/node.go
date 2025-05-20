@@ -16,24 +16,29 @@ type RootNode struct {
 	Content []BlockNode
 }
 
+func (r *RootNode) ToHTMLParagraph(text string) string {
+	// Xatena.pm as_html_paragraph 互換: \n\n+ で分割し <p>...</p> で囲む、空行数に応じて <br /> を出力
+	re := regexp.MustCompile(`(\n{2,})`)
+	parts := reSplitWithSep(re, text)
+
+	html := "<p>"
+	for _, para := range parts {
+		if regexp.MustCompile(`^\n+$`).MatchString(para) {
+			html += "</p>" + strings.Repeat("<br />\n", (len(para)-2)) + "<p>"
+		} else {
+			html += strings.Join(strings.Split(para, "\n"), "<br />\n")
+		}
+	}
+	html += "</p>"
+	return html
+}
+
 func (r *RootNode) ToHTML() string {
 	html := ""
 	var textBuf []string
 	flushParagraph := func() {
 		if len(textBuf) > 0 {
-			// Xatena.pm as_html_paragraph 互換: \n\n+ で分割し <p>...</p> で囲む、空行数に応じて <br /> を出力
-			re := regexp.MustCompile(`(\n{2,})`)
-			parts := reSplitWithSep(re, strings.Join(textBuf, "\n"))
-
-			html += "<p>"
-			for _, para := range parts {
-				if regexp.MustCompile(`^\n+$`).MatchString(para) {
-					html += "</p>" + strings.Repeat("<br />\n", (len(para)-2)) + "<p>"
-				} else {
-					html += strings.Join(strings.Split(para, "\n"), "<br />\n")
-				}
-			}
-			html += "</p>"
+			html += r.ToHTMLParagraph(strings.Join(textBuf, "\n"))
 			textBuf = nil
 		}
 	}
