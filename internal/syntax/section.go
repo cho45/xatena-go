@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -48,7 +49,7 @@ func (p *SectionParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]B
 	return true
 }
 
-func (s *SectionNode) ToHTML() string {
+func (s *SectionNode) ToHTML(ctx context.Context) string {
 	html := `<div class="section">\n` +
 		fmt.Sprintf("<h%d>%s</h%d>\n", s.Level+2, util.EscapeHTML(s.Title), s.Level+2)
 	html += "</div>"

@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"context"
 	"regexp"
 	"strings"
 )
@@ -15,7 +16,7 @@ type ListItemNode struct {
 	Content []BlockNode // each item can contain blocks (usually ParagraphNode)
 }
 
-func (l *ListNode) ToHTML() string {
+func (l *ListNode) ToHTML(ctx context.Context) string {
 	tag := "ul"
 	if l.Ordered {
 		tag = "ol"
@@ -32,7 +33,7 @@ func (l *ListNode) ToHTML() string {
 				if len(textBuf) > 0 {
 					textBuf = nil
 				}
-				html += n.ToHTML()
+				html += n.ToHTML(ctx)
 			}
 		}
 		if len(textBuf) > 0 {

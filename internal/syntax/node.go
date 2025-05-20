@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"context"
 	"regexp"
 	"strings"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type BlockNode interface {
-	ToHTML() string
+	ToHTML(ctx context.Context) string
 	AddChild(n BlockNode)
 }
 
@@ -33,7 +34,7 @@ func (r *RootNode) ToHTMLParagraph(text string) string {
 	return html
 }
 
-func (r *RootNode) ToHTML() string {
+func (r *RootNode) ToHTML(ctx context.Context) string {
 	html := ""
 	var textBuf []string
 	flushParagraph := func() {
@@ -47,7 +48,7 @@ func (r *RootNode) ToHTML() string {
 			textBuf = append(textBuf, t.Text)
 		} else {
 			flushParagraph()
-			html += n.ToHTML()
+			html += n.ToHTML(ctx)
 		}
 	}
 	flushParagraph()
@@ -85,7 +86,7 @@ type TextNode struct {
 	Text string
 }
 
-func (t *TextNode) ToHTML() string {
+func (t *TextNode) ToHTML(ctx context.Context) string {
 	return util.EscapeHTML(t.Text)
 }
 

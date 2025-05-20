@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"context"
 	"regexp"
 	"strings"
 )
@@ -11,7 +12,7 @@ type PreNode struct {
 	RawText string // raw preformatted text
 }
 
-func (p *PreNode) ToHTML() string {
+func (p *PreNode) ToHTML(ctx context.Context) string {
 	class := ""
 	if p.Lang != "" {
 		class = " class=\"code lang-" + p.Lang + "\""

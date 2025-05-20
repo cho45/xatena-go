@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"context"
 	"regexp"
 	"strings"
 
@@ -17,7 +18,7 @@ type TableCellNode struct {
 	Content  string
 }
 
-func (t *TableNode) ToHTML() string {
+func (t *TableNode) ToHTML(ctx context.Context) string {
 	html := "<table>\n"
 	for _, row := range t.Rows {
 		html += "  <tr>\n"

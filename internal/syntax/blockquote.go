@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"context"
 	"regexp"
 	"strings"
 
@@ -14,14 +15,14 @@ type BlockquoteNode struct {
 	Content []BlockNode // nested block nodes
 }
 
-func (b *BlockquoteNode) ToHTML() string {
+func (b *BlockquoteNode) ToHTML(ctx context.Context) string {
 	html := "<blockquote"
 	if b.Cite != "" {
 		html += " cite=\"" + util.EscapeHTML(b.Cite) + "\""
 	}
 	html += ">\n"
 	for _, n := range b.Content {
-		html += n.ToHTML()
+		html += n.ToHTML(ctx)
 	}
 	if b.Title != "" {
 		// Xatena仕様: cite内容がURLならリンク化

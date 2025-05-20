@@ -1,6 +1,7 @@
 package syntax
 
 import (
+	"context"
 	"regexp"
 	"strings"
 
@@ -20,7 +21,7 @@ type DefinitionItemNode struct {
 	Desc string
 }
 
-func (d *DefinitionListNode) ToHTML() string {
+func (d *DefinitionListNode) ToHTML(ctx context.Context) string {
 	html := "<dl>\n"
 	for _, item := range d.Items {
 		html += "  <dt>" + util.EscapeHTML(item.Term) + "</dt>\n"
