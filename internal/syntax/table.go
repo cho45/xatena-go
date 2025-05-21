@@ -18,7 +18,7 @@ type TableCellNode struct {
 	Content  string
 }
 
-func (t *TableNode) ToHTML(ctx context.Context) string {
+func (t *TableNode) ToHTML(ctx context.Context, inline Inline) string {
 	html := "<table>\n"
 	for _, row := range t.Rows {
 		html += "  <tr>\n"

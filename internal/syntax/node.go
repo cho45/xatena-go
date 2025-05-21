@@ -7,7 +7,7 @@ import (
 )
 
 type Node interface {
-	ToHTML(ctx context.Context) string
+	ToHTML(ctx context.Context, inline Inline) string
 }
 
 type HasContent interface {
@@ -19,8 +19,8 @@ type RootNode struct {
 	Content []Node
 }
 
-func ToHTMLParagraph(text string) string {
-	// Xatena.pm as_html_paragraph 互換: \n\n+ で分割し <p>...</p> で囲む、空行数に応じて <br /> を出力
+func ToHTMLParagraph(text string, inline Inline) string {
+	text = inline.Format(text)
 	re := regexp.MustCompile(`(\n{2,})`)
 	parts := reSplitWithSep(re, text)
 
@@ -36,12 +36,12 @@ func ToHTMLParagraph(text string) string {
 	return html
 }
 
-func ContentToHTML(r HasContent, ctx context.Context) string {
+func ContentToHTML(r HasContent, ctx context.Context, inline Inline) string {
 	html := ""
 	var textBuf []string
 	flushParagraph := func() {
 		if len(textBuf) > 0 {
-			html += ToHTMLParagraph(strings.Join(textBuf, "\n"))
+			html += ToHTMLParagraph(strings.Join(textBuf, "\n"), inline)
 			textBuf = nil
 		}
 	}
@@ -50,7 +50,7 @@ func ContentToHTML(r HasContent, ctx context.Context) string {
 			textBuf = append(textBuf, t.Text)
 		} else {
 			flushParagraph()
-			html += n.ToHTML(ctx)
+			html += n.ToHTML(ctx, inline)
 		}
 	}
 	flushParagraph()
@@ -88,14 +88,14 @@ func (r *RootNode) GetContent() []Node {
 	return r.Content
 }
 
-func (r *RootNode) ToHTML(ctx context.Context) string {
-	return ContentToHTML(r, ctx)
+func (r *RootNode) ToHTML(ctx context.Context, inline Inline) string {
+	return ContentToHTML(r, ctx, inline)
 }
 
 type TextNode struct {
 	Text string
 }
 
-func (t *TextNode) ToHTML(ctx context.Context) string {
+func (t *TextNode) ToHTML(ctx context.Context, inline Inline) string {
 	panic("TextNode does not support ToHTML")
 }

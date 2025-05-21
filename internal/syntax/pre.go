@@ -12,7 +12,7 @@ type PreNode struct {
 	RawText string // raw preformatted text
 }
 
-func (p *PreNode) ToHTML(ctx context.Context) string {
+func (p *PreNode) ToHTML(ctx context.Context, inline Inline) string {
 	class := ""
 	if p.Lang != "" {
 		class = " class=\"code lang-" + p.Lang + "\""

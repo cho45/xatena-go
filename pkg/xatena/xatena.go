@@ -10,7 +10,7 @@ import (
 // 今後オプションや拡張もここに集約
 
 type Xatena struct {
-	Inline *syntax.InlineFormatter
+	Inline syntax.Inline
 }
 
 func NewXatena() *Xatena {
@@ -58,5 +58,5 @@ func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode
 // ToHTML: Xatenaインスタンスとcontext.Contextを渡す
 func (x *Xatena) ToHTML(ctx context.Context, input string) string {
 	node := x.parseXatena(ctx, input)
-	return node.ToHTML(ctx)
+	return node.ToHTML(ctx, x.Inline)
 }

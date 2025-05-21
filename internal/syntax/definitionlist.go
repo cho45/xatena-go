@@ -21,7 +21,7 @@ type DefinitionItemNode struct {
 	Desc string
 }
 
-func (d *DefinitionListNode) ToHTML(ctx context.Context) string {
+func (d *DefinitionListNode) ToHTML(ctx context.Context, inline Inline) string {
 	html := "<dl>\n"
 	for _, item := range d.Items {
 		html += "  <dt>" + util.EscapeHTML(item.Term) + "</dt>\n"

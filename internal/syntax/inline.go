@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+type Inline interface {
+	Format(s string) string
+}
+
 type InlineFormatter struct {
 	footnotes  []Footnote
 	aggressive bool              // aggressive title fetch (未実装)
