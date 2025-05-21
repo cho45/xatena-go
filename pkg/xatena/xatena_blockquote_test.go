@@ -4,28 +4,95 @@ import (
 	"testing"
 )
 
-const blockquoteTestData = `=== blockquote_simple
+const blockquoteTestData = `
+=== test
 --- input
 >>
-quoted text
-foobar
+quote
 <<
 --- expected
 <blockquote>
-<p>quoted text</p>
-<p>foobar</p>
+<p>quote</p>
 </blockquote>
 
-=== blockquote_with_cite
+=== test
+--- input
+>>
+quote1
+>>
+quote2
+<<
+<<
+--- expected
+<blockquote>
+    <p>quote1</p>
+    <blockquote>
+        <p>quote2</p>
+    </blockquote>
+</blockquote>
+
+=== test
 --- input
 >http://example.com/>
-foobar
+quote
 <<
 --- expected
 <blockquote cite="http://example.com/">
-<p>foobar</p>
-<cite><a href="http://example.com/">http://example.com/</a></cite>
+	<p>quote</p>
+	<cite><a href="http://example.com/">http://example.com/</a></cite>
 </blockquote>
+
+=== http
+--- input
+>http://example.com/:title>
+quote
+<<
+--- expected
+<blockquote cite="http://example.com/">
+	<p>quote</p>
+	<cite><a href="http://example.com/">Example Web Page</a></cite>
+</blockquote>
+
+=== cite
+--- input
+>foobar>
+quote
+<<
+--- expected
+<blockquote>
+	<p>quote</p>
+	<cite>foobar</cite>
+</blockquote>
+
+
+=== test
+--- input
+>>
+quote
+<<
+test
+--- expected
+<blockquote>
+<p>quote</p>
+</blockquote>
+<p>test</p>
+
+=== bug1
+--- input
+>>
+* hoge1
+hoge2
+<<
+hoge3
+--- expected
+<blockquote>
+	<div class="section">
+		<h3>hoge1</h3>
+		<p>hoge2</p>
+	</div>
+</blockquote>
+<p>hoge3</p>
+
 `
 
 func TestFormat_Blockquote_ENDStyle(t *testing.T) {
