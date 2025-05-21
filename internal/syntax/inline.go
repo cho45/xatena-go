@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type InlineParser struct {
+type InlineFormatter struct {
 	footnotes  []Footnote
 	aggressive bool              // aggressive title fetch (未実装)
 	cache      map[string]string // dummy cache for title (未実装)
@@ -20,14 +20,14 @@ type Footnote struct {
 	Title  string
 }
 
-func NewInlineParser() *InlineParser {
-	return &InlineParser{
+func NewInlineFormatter() *InlineFormatter {
+	return &InlineFormatter{
 		footnotes: []Footnote{},
 		cache:     map[string]string{},
 	}
 }
 
-func (p *InlineParser) Parse(s string) string {
+func (f *InlineFormatter) Format(s string) string {
 	// Perlのmatch順に正規表現を適用
 	// 1. [[]...[]] などの特殊なアンリンク
 	s = regexp.MustCompile(`\[\]([\s\S]*?)\[\]`).ReplaceAllStringFunc(s, func(m string) string {
@@ -43,8 +43,8 @@ func (p *InlineParser) Parse(s string) string {
 	s = regexp.MustCompile(`\(\((.+?)\)\)`).ReplaceAllStringFunc(s, func(m string) string {
 		note := m[2 : len(m)-2]
 		title := stripTags(note)
-		p.footnotes = append(p.footnotes, Footnote{Number: len(p.footnotes) + 1, Note: note, Title: title})
-		return fmt.Sprintf(`<a href="#fn%d" title="%s">*%d</a>`, len(p.footnotes), html.EscapeString(title), len(p.footnotes))
+		f.footnotes = append(f.footnotes, Footnote{Number: len(f.footnotes) + 1, Note: note, Title: title})
+		return fmt.Sprintf(`<a href="#fn%d" title="%s">*%d</a>`, len(f.footnotes), html.EscapeString(title), len(f.footnotes))
 	})
 	// 3. <a...>...</a> そのまま
 	s = regexp.MustCompile(`(?i)<a[^>]+>[\s\S]*?</a>`).ReplaceAllStringFunc(s, func(m string) string {
@@ -58,7 +58,6 @@ func (p *InlineParser) Parse(s string) string {
 	})
 	// 6. [url:option] (barcode, title)
 	s = regexp.MustCompile(`\[((?:https?|ftp)://[^\s:]+(?:\:\d+)?[^\s:]+)(:(?:title(?:=([^\]]+))?|barcode))?\]`).ReplaceAllStringFunc(s, func(m string) string {
-		// [で始まり]で終わるものだけを対象にする
 		if !strings.HasPrefix(m, "[") || !strings.HasSuffix(m, "]") {
 			return m
 		}
@@ -72,7 +71,7 @@ func (p *InlineParser) Parse(s string) string {
 			return fmt.Sprintf(`<img src="http://chart.apis.google.com/chart?chs=150x150&cht=qr&chl=%s" title="%s"/>`, url.QueryEscape(uri), html.EscapeString(uri))
 		}
 		if strings.HasPrefix(opt, ":title") {
-			if title == "" && p.aggressive {
+			if title == "" && f.aggressive {
 				// aggressive title fetch (未実装)
 			}
 			return fmt.Sprintf(`<a href="%s">%s</a>`, uri, html.EscapeString(title))
@@ -126,6 +125,6 @@ func stripTags(s string) string {
 	return re.ReplaceAllString(s, "")
 }
 
-func (p *InlineParser) Footnotes() []Footnote {
-	return p.footnotes
+func (f *InlineFormatter) Footnotes() []Footnote {
+	return f.footnotes
 }

@@ -6,16 +6,16 @@ import (
 	"github.com/cho45/xatena-go/internal/syntax"
 )
 
-// Xatena 構造体: InlineParser などを保持
+// Xatena 構造体: InlineFormatter などを保持
 // 今後オプションや拡張もここに集約
 
 type Xatena struct {
-	Inline *syntax.InlineParser
+	Inline *syntax.InlineFormatter
 }
 
 func NewXatena() *Xatena {
 	return &Xatena{
-		Inline: syntax.NewInlineParser(),
+		Inline: syntax.NewInlineFormatter(),
 	}
 }
 

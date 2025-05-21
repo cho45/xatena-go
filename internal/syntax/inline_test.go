@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestInlineParser_Parse(t *testing.T) {
+func TestInlineFormatter_Format(t *testing.T) {
 	cases := []struct {
 		name   string
 		input  string
@@ -48,8 +48,8 @@ func TestInlineParser_Parse(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		p := NewInlineParser()
-		got := p.Parse(c.input)
+		f := NewInlineFormatter()
+		got := f.Format(c.input)
 		if got != c.expect {
 			t.Errorf("%s: input=%q\nexpect=%q\ngot   =%q", c.name, c.input, c.expect, got)
 		}
