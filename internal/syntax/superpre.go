@@ -23,8 +23,12 @@ func (s *SuperPreNode) ToHTML(ctx context.Context) string {
 	return "<pre" + class + ">\n" + util.EscapeHTML(s.RawText) + "\n</pre>"
 }
 
-func (s *SuperPreNode) AddChild(n BlockNode) {
+func (s *SuperPreNode) AddChild(n Node) {
 	panic("SuperPreNode does not support adding child nodes")
+}
+
+func (s *SuperPreNode) GetContent() []Node {
+	return nil
 }
 
 type SuperPreParser struct{}
@@ -32,7 +36,7 @@ type SuperPreParser struct{}
 var reSuperPreStart = regexp.MustCompile(`^>\|\|([^|]*)\|?$`)
 var reSuperPreEnd = regexp.MustCompile(`^\|\|<$`)
 
-func (p *SuperPreParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]BlockNode) bool {
+func (p *SuperPreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	line := scanner.Peek()
 	m := reSuperPreStart.FindStringSubmatch(line)
 	if m == nil {
@@ -50,7 +54,7 @@ func (p *SuperPreParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]
 		content = append(content, scanner.Next())
 	}
 	node := &SuperPreNode{Lang: lang, RawText: strings.Join(content, "\n")}
-	if add, ok := parent.(interface{ AddChild(BlockNode) }); ok {
+	if add, ok := parent.(interface{ AddChild(Node) }); ok {
 		add.AddChild(node)
 	}
 	*stack = append(*stack, node)

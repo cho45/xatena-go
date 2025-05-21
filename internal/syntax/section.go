@@ -13,18 +13,28 @@ var reSection = regexp.MustCompile(`^(\*+)(\s*)(.*)$`)
 
 // SectionNode represents a section (heading + content)
 type SectionNode struct {
-	Level   int         // 1=*, 2=**, ...
-	Title   string      // heading text
-	Content []BlockNode // nested block nodes
+	Level   int    // 1=*, 2=**, ...
+	Title   string // heading text
+	Content []Node // nested block nodes
 }
 
-func (s *SectionNode) AddChild(n BlockNode) {
+func (s *SectionNode) AddChild(n Node) {
 	s.Content = append(s.Content, n)
+}
+
+func (s *SectionNode) GetContent() []Node {
+	return s.Content
+}
+
+type SectionTitleNode struct{}
+
+func (s *SectionTitleNode) GetContent() []Node {
+	return nil
 }
 
 type SectionParser struct{}
 
-func (p *SectionParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]BlockNode) bool {
+func (p *SectionParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	line := scanner.Peek()
 	m := reSection.FindStringSubmatch(line)
 	if m == nil {

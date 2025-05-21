@@ -38,7 +38,7 @@ func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode
 	parsers := x.GetBlockParsers()
 	scanner := syntax.NewLineScanner(input)
 	root := &syntax.RootNode{}
-	stack := []syntax.BlockNode{root}
+	stack := []syntax.HasContent{root}
 	for !scanner.EOF() {
 		parent := stack[len(stack)-1]
 		matched := false
@@ -58,5 +58,5 @@ func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode
 // ToHTML: Xatenaインスタンスとcontext.Contextを渡す
 func (x *Xatena) ToHTML(ctx context.Context, input string) string {
 	node := x.parseXatena(ctx, input)
-	return node.ToHTML(ctx, x)
+	return node.ToHTML(ctx)
 }

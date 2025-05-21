@@ -20,8 +20,12 @@ func (p *PreNode) ToHTML(ctx context.Context) string {
 	return "<pre" + class + ">\n" + p.RawText + "\n</pre>"
 }
 
-func (p *PreNode) AddChild(n BlockNode) {
+func (p *PreNode) AddChild(n Node) {
 	panic("PreNode does not support adding child nodes")
+}
+
+func (p *PreNode) GetContent() []Node {
+	return nil
 }
 
 type PreParser struct{}
@@ -29,7 +33,7 @@ type PreParser struct{}
 var rePreStart = regexp.MustCompile(`^>\|([^|]*)\|?$`)
 var rePreEnd = regexp.MustCompile(`^\|<$`)
 
-func (p *PreParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]BlockNode) bool {
+func (p *PreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	line := scanner.Peek()
 	m := rePreStart.FindStringSubmatch(line)
 	if m == nil {
@@ -47,7 +51,7 @@ func (p *PreParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]Block
 		content = append(content, scanner.Next())
 	}
 	node := &PreNode{Lang: lang, RawText: strings.Join(content, "\n")}
-	if add, ok := parent.(interface{ AddChild(BlockNode) }); ok {
+	if add, ok := parent.(interface{ AddChild(Node) }); ok {
 		add.AddChild(node)
 	}
 	*stack = append(*stack, node)

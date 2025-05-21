@@ -14,8 +14,12 @@ type StopPNode struct {
 func (s *StopPNode) ToHTML(ctx context.Context) string {
 	return s.Content
 }
-func (s *StopPNode) AddChild(n BlockNode) {
+func (s *StopPNode) AddChild(n Node) {
 	panic("StopPNode does not support child nodes")
+}
+
+func (s *StopPNode) GetContent() []Node {
+	return nil
 }
 
 type StopPParser struct{}
@@ -23,7 +27,7 @@ type StopPParser struct{}
 var reStopPStart = regexp.MustCompile(`^>\s*$`)
 var reStopPEnd = regexp.MustCompile(`^<\s*$`)
 
-func (p *StopPParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]BlockNode) bool {
+func (p *StopPParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	line := scanner.Peek()
 	if !reStopPStart.MatchString(line) {
 		return false
@@ -39,7 +43,7 @@ func (p *StopPParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]Blo
 		content = append(content, scanner.Next())
 	}
 	node := &StopPNode{Content: strings.Join(content, "\n")}
-	if add, ok := parent.(interface{ AddChild(BlockNode) }); ok {
+	if add, ok := parent.(interface{ AddChild(Node) }); ok {
 		add.AddChild(node)
 	}
 	*stack = append(*stack, node)

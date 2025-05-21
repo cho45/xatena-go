@@ -10,9 +10,9 @@ import (
 
 // BlockquoteNode represents a blockquote block.
 type BlockquoteNode struct {
-	Cite    string      // cite URL (optional)
-	Title   string      // title or label (optional)
-	Content []BlockNode // nested block nodes
+	Cite    string // cite URL (optional)
+	Title   string // title or label (optional)
+	Content []Node // nested block nodes
 }
 
 func (b *BlockquoteNode) ToHTML(ctx context.Context) string {
@@ -36,6 +36,10 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context) string {
 	return html
 }
 
+func (b *BlockquoteNode) GetContent() []Node {
+	return b.Content
+}
+
 func isURL(s string) bool {
 	return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://")
 }
@@ -44,6 +48,12 @@ type BlockquoteParser struct{}
 
 var reBlockquote = regexp.MustCompile(`^>([^>]+)?>$`)
 
-func (p *BlockquoteParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]BlockNode) bool {
+func (p *BlockquoteParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	return false
+}
+
+type BlockquoteLineNode struct{}
+
+func (b *BlockquoteLineNode) GetContent() []Node {
+	return nil
 }

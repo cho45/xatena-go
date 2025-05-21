@@ -1,6 +1,7 @@
 package xatena
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -105,4 +106,9 @@ func equalHTMLNode(a, b *html.Node) bool {
 		return false
 	}
 	return true
+}
+
+func Format(s string) string {
+	x := NewXatena()
+	return x.ToHTML(context.Background(), s)
 }

@@ -4,20 +4,22 @@ import (
 	"context"
 	"regexp"
 	"strings"
-
-	"github.com/cho45/xatena-go/internal/util"
 )
 
-type BlockNode interface {
+type Node interface {
 	ToHTML(ctx context.Context) string
-	AddChild(n BlockNode)
+}
+
+type HasContent interface {
+	AddChild(n Node)
+	GetContent() []Node
 }
 
 type RootNode struct {
-	Content []BlockNode
+	Content []Node
 }
 
-func (r *RootNode) ToHTMLParagraph(text string) string {
+func ToHTMLParagraph(text string) string {
 	// Xatena.pm as_html_paragraph 互換: \n\n+ で分割し <p>...</p> で囲む、空行数に応じて <br /> を出力
 	re := regexp.MustCompile(`(\n{2,})`)
 	parts := reSplitWithSep(re, text)
@@ -34,16 +36,16 @@ func (r *RootNode) ToHTMLParagraph(text string) string {
 	return html
 }
 
-func (r *RootNode) ToHTML(ctx context.Context) string {
+func ContentToHTML(r HasContent, ctx context.Context) string {
 	html := ""
 	var textBuf []string
 	flushParagraph := func() {
 		if len(textBuf) > 0 {
-			html += r.ToHTMLParagraph(strings.Join(textBuf, "\n"))
+			html += ToHTMLParagraph(strings.Join(textBuf, "\n"))
 			textBuf = nil
 		}
 	}
-	for _, n := range r.Content {
+	for _, n := range r.GetContent() {
 		if t, ok := n.(*TextNode); ok {
 			textBuf = append(textBuf, t.Text)
 		} else {
@@ -75,11 +77,19 @@ func reSplitWithSep(re *regexp.Regexp, s string) []string {
 }
 
 type BlockParser interface {
-	Parse(scanner *LineScanner, parent BlockNode, stack *[]BlockNode) bool
+	Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool
 }
 
-func (r *RootNode) AddChild(n BlockNode) {
+func (r *RootNode) AddChild(n Node) {
 	r.Content = append(r.Content, n)
+}
+
+func (r *RootNode) GetContent() []Node {
+	return r.Content
+}
+
+func (r *RootNode) ToHTML(ctx context.Context) string {
+	return ContentToHTML(r, ctx)
 }
 
 type TextNode struct {
@@ -87,9 +97,5 @@ type TextNode struct {
 }
 
 func (t *TextNode) ToHTML(ctx context.Context) string {
-	return util.EscapeHTML(t.Text)
-}
-
-func (t *TextNode) AddChild(n BlockNode) {
-	panic("TextNode cannot have children")
+	panic("TextNode does not support ToHTML")
 }

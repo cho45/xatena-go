@@ -35,15 +35,19 @@ func (t *TableNode) ToHTML(ctx context.Context) string {
 	return html
 }
 
-func (t *TableNode) AddChild(n BlockNode) {
+func (t *TableNode) AddChild(n Node) {
 	// テーブルは子ブロックを持たないので何もしない
+}
+
+func (t *TableNode) GetContent() []Node {
+	return nil
 }
 
 type TableParser struct{}
 
 var reTableRow = regexp.MustCompile(`^\|`)
 
-func (p *TableParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]BlockNode) bool {
+func (p *TableParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if !reTableRow.MatchString(scanner.Peek()) {
 		return false
 	}
@@ -56,7 +60,7 @@ func (p *TableParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]Blo
 	}
 
 	node := &TableNode{Rows: rows}
-	if add, ok := parent.(interface{ AddChild(BlockNode) }); ok {
+	if add, ok := parent.(interface{ AddChild(Node) }); ok {
 		add.AddChild(node)
 	}
 	*stack = append(*stack, node)

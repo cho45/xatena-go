@@ -31,15 +31,20 @@ func (d *DefinitionListNode) ToHTML(ctx context.Context) string {
 	return html
 }
 
-func (d *DefinitionListNode) AddChild(n BlockNode) {
+func (d *DefinitionListNode) AddChild(n Node) {
 	// 定義リストは子ブロックを持たないので何もしない
+}
+
+// DefinitionListNode（仮名）などContentを持つ型の場合:
+func (d *DefinitionListNode) GetContent() []Node {
+	return nil
 }
 
 // DefinitionListParser parses definition list blocks
 // 例: :term:desc で始まる連続行をまとめてパース
 type DefinitionListParser struct{}
 
-func (p *DefinitionListParser) Parse(scanner *LineScanner, parent BlockNode, stack *[]BlockNode) bool {
+func (p *DefinitionListParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if !reDefinitionList.MatchString(scanner.Peek()) {
 		return false
 	}
@@ -69,7 +74,7 @@ func (p *DefinitionListParser) Parse(scanner *LineScanner, parent BlockNode, sta
 	}
 
 	node := &DefinitionListNode{Items: items}
-	if add, ok := parent.(interface{ AddChild(BlockNode) }); ok {
+	if add, ok := parent.(interface{ AddChild(Node) }); ok {
 		add.AddChild(node)
 	}
 	*stack = append(*stack, node)
