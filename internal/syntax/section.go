@@ -57,6 +57,8 @@ func (p *SectionParser) Parse(scanner *LineScanner, parent HasContent, stack *[]
 	for len(*stack) > 0 {
 		if s, ok := (*stack)[len(*stack)-1].(*SectionNode); ok && s.Level >= level {
 			*stack = (*stack)[:len(*stack)-1]
+		} else if s, ok := (*stack)[len(*stack)-1].(*SeeMoreNode); ok && level == 1 && !s.IsSuper {
+			*stack = (*stack)[:len(*stack)-1]
 		} else {
 			break
 		}

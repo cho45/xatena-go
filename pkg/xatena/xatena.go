@@ -22,6 +22,7 @@ func NewXatena() *Xatena {
 // GetBlockParsers: Xatenaインスタンスを受け取る形に変更
 func (x *Xatena) GetBlockParsers() []syntax.BlockParser {
 	return []syntax.BlockParser{
+		&syntax.SeeMoreParser{},
 		&syntax.SuperPreParser{},
 		&syntax.StopPParser{},
 		&syntax.BlockquoteParser{},
@@ -30,6 +31,7 @@ func (x *Xatena) GetBlockParsers() []syntax.BlockParser {
 		&syntax.DefinitionListParser{},
 		&syntax.TableParser{},
 		&syntax.SectionParser{},
+		// &syntax.CommentParser{},
 	}
 }
 

@@ -13,10 +13,7 @@ type SeeMoreNode struct {
 }
 
 func (s *SeeMoreNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	content := ""
-	for _, child := range s.children {
-		content += child.ToHTML(ctx, inline, options)
-	}
+	content := ContentToHTML(s, ctx, inline, options)
 	return `<div class="seemore">` + content + `</div>`
 }
 
@@ -33,14 +30,13 @@ type SeeMoreParser struct{}
 var reSeeMore = regexp.MustCompile(`^====(=)?$`)
 
 func (p *SeeMoreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
-	line := scanner.Peek()
-	m := reSeeMore.FindStringSubmatch(line)
-	if m == nil {
-		return false
+	if scanner.Scan(reSeeMore) {
+		isSuper := scanner.Matched()[1] != ""
+		node := &SeeMoreNode{IsSuper: isSuper}
+		parent.AddChild(node)
+		*stack = append(*stack, node)
+		return true
 	}
-	scanner.Next() // consume
-	node := &SeeMoreNode{IsSuper: m[1] != ""}
-	parent.AddChild(node)
-	*stack = append(*stack, node)
-	return true
+
+	return false
 }
