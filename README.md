@@ -33,9 +33,17 @@ cat sample.txt | ./xatena-cli
 ### ライブラリ
 
 ```go
-import "github.com/cho45/xatena-go/pkg/xatena"
+import (
+    "context"
+    "github.com/cho45/xatena-go/pkg/xatena"
+)
 
-html := xatena.Render("* 見出し\n本文\n")
+func main() {
+    input := "* 見出し\n本文\n"
+    x := xatena.NewXatena()
+    html := x.ToHTML(context.Background(), input)
+    // html を使う
+}
 ```
 
 ## テスト
