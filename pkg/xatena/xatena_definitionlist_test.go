@@ -24,7 +24,7 @@ const definitionListTestData = `=== definitionlist_simple
 --- expected
 <dl>
   <dt>foo</dt>
-  <dd>\nbar</dd>
+  <dd> bar</dd>
   <dt>baz</dt>
   <dd>qux</dd>
 </dl>
