@@ -20,7 +20,7 @@ func NewXatenaWithInline(inline syntax.Inline) *Xatena {
 }
 
 func NewXatena() *Xatena {
-	return NewXatenaWithInline(syntax.NewInlineFormatter())
+	return NewXatenaWithInline(NewInlineFormatter())
 }
 
 // GetBlockParsers: Xatenaインスタンスを受け取る形に変更
