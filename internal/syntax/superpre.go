@@ -15,16 +15,16 @@ type SuperPreNode struct {
 }
 
 func (s *SuperPreNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	class := ""
+	className := "code"
+	langClass := ""
 	if s.Lang != "" {
-		class = " class=\"code lang-" + s.Lang + "\""
+		langClass = " lang-" + s.Lang
 	}
-	// HTMLエスケープ
-	return "<pre" + class + ">\n" + util.EscapeHTML(s.RawText) + "\n</pre>"
+	return `<pre class="` + className + langClass + `">` + util.EscapeHTML(s.RawText) + `</pre>`
 }
 
 func (s *SuperPreNode) AddChild(n Node) {
-	panic("SuperPreNode does not support adding child nodes")
+	// SuperPreNodeは子ノードを持たない
 }
 
 func (s *SuperPreNode) GetContent() []Node {
@@ -33,30 +33,20 @@ func (s *SuperPreNode) GetContent() []Node {
 
 type SuperPreParser struct{}
 
-var reSuperPreStart = regexp.MustCompile(`^>\|\|([^|]*)\|?$`)
+var reSuperPreStart = regexp.MustCompile(`^>\|([^|]*)\|$`)
 var reSuperPreEnd = regexp.MustCompile(`^\|\|<$`)
 
 func (p *SuperPreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
-	line := scanner.Peek()
-	m := reSuperPreStart.FindStringSubmatch(line)
-	if m == nil {
-		return false
-	}
-	scanner.Next() // consume start
-	lang := strings.TrimSpace(m[1])
-	var content []string
-	for !scanner.EOF() {
-		l := scanner.Peek()
-		if reSuperPreEnd.MatchString(l) {
-			scanner.Next() // consume end
-			break
+	if scanner.Scan(reSuperPreStart) {
+		lang := scanner.Matched()[1]
+		lines := scanner.ScanUntil(reSuperPreEnd)
+		lines = lines[:len(lines)-1] // remove last matched
+		node := &SuperPreNode{
+			Lang:    lang,
+			RawText: strings.Join(lines, "\n"),
 		}
-		content = append(content, scanner.Next())
+		parent.AddChild(node)
+		return true
 	}
-	node := &SuperPreNode{Lang: lang, RawText: strings.Join(content, "\n")}
-	if add, ok := parent.(interface{ AddChild(Node) }); ok {
-		add.AddChild(node)
-	}
-	*stack = append(*stack, node)
-	return true
+	return false
 }
