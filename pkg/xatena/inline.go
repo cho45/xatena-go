@@ -63,7 +63,7 @@ func defaultInlineRules() []InlineRule {
 			Pattern: regexp.MustCompile(`\(\((.+?)\)\)`),
 			Handler: func(f *InlineFormatter, m []string) string { // footnote
 				note := m[1]
-				title := stripTags(note)
+				title := html.EscapeString(note)
 				f.footnotes = append(f.footnotes, Footnote{Number: len(f.footnotes) + 1, Note: note, Title: title})
 				return fmt.Sprintf(`<a href="#fn%d" title="%s">*%d</a>`, len(f.footnotes), html.EscapeString(title), len(f.footnotes))
 			},
