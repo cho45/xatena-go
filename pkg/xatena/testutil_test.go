@@ -16,9 +16,9 @@ type TestBlock struct {
 }
 
 // === [name]\n--- [section]\n...\n--- [section]\n... 形式のテストフィクスチャをパース
-func parseTestBlocks(data string) []TestBlock {
+func parseTestBlocksWithDelim(data, blockDelim, sectionDelim string) []TestBlock {
 	var blocks []TestBlock
-	parts := strings.Split(data, "=== ")
+	parts := strings.Split(data, blockDelim)
 	for _, part := range parts {
 		part = strings.TrimSpace(part)
 		if part == "" {
@@ -30,11 +30,11 @@ func parseTestBlocks(data string) []TestBlock {
 		var currentSection string
 		var buf []string
 		for _, line := range lines[1:] {
-			if strings.HasPrefix(line, "--- ") {
+			if strings.HasPrefix(line, sectionDelim) {
 				if currentSection != "" {
 					sections[currentSection] = strings.TrimRight(strings.Join(buf, "\n"), "\n")
 				}
-				currentSection = strings.TrimSpace(line[4:])
+				currentSection = strings.TrimSpace(line[len(sectionDelim):])
 				buf = buf[:0]
 			} else {
 				buf = append(buf, line)
@@ -46,6 +46,11 @@ func parseTestBlocks(data string) []TestBlock {
 		blocks = append(blocks, TestBlock{Name: name, Sections: sections})
 	}
 	return blocks
+}
+
+// 既存のparseTestBlocksはデフォルト区切りで呼び出す
+func parseTestBlocks(data string) []TestBlock {
+	return parseTestBlocksWithDelim(data, "===", "---")
 }
 
 // EqualHTML は2つのHTML文字列を構造的に比較し、異なればt.Errorfで詳細を出力する
