@@ -47,9 +47,11 @@ func (p *DefinitionListParser) Parse(scanner *LineScanner, parent HasContent, st
 	var lines []string
 	matched := false
 	for !scanner.EOF() {
-		line := scanner.Peek()
-		if reDefinitionList.MatchString(line) || reDefinitionListCont.MatchString(line) {
-			lines = append(lines, scanner.Next())
+		if scanner.Scan(reDefinitionListCont) {
+			lines = append(lines, scanner.Matched()[0])
+			matched = true
+		} else if scanner.Scan(reDefinitionList) {
+			lines = append(lines, scanner.Matched()[0])
 			matched = true
 		} else {
 			break

@@ -8,7 +8,7 @@ import (
 // SeeMoreNode represents a <div class="seemore"> block
 // (==== or ===== line)
 type SeeMoreNode struct {
-	IsSuper  bool
+	IsSuper bool
 	Content []Node
 }
 

@@ -77,12 +77,13 @@ func isURL(s string) bool {
 type BlockquoteParser struct{}
 
 var reBlockquote = regexp.MustCompile(`^>([^>]+)?>$`)
+var reBlockquoteEnd = regexp.MustCompile(`^<<$`)
 
 func (p *BlockquoteParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	// BEGINNING: ^>(.*?)>$
-	if m := reBlockquote.FindStringSubmatch(scanner.Peek()); m != nil {
-		scanner.Next()
+	if scanner.Scan(reBlockquote) {
 		node := &BlockquoteNode{}
+		m := scanner.Matched()
 		if len(m) > 1 {
 			txt := strings.TrimSpace(m[1])
 			node.Cite = txt
@@ -92,8 +93,7 @@ func (p *BlockquoteParser) Parse(scanner *LineScanner, parent HasContent, stack 
 		return true
 	}
 	// ENDOFNODE: ^<<$
-	if strings.TrimSpace(scanner.Peek()) == "<<" {
-		scanner.Next()
+	if scanner.Scan(reBlockquoteEnd) {
 		// Sectionノードを飛ばしてpop
 		for len(*stack) > 0 {
 			if _, ok := (*stack)[len(*stack)-1].(*SectionNode); ok {

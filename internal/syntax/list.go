@@ -55,20 +55,18 @@ var (
 )
 
 func (p *ListParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
-	line := scanner.Peek()
-	if !reList.MatchString(line) {
+	if !scanner.Scan(reList) {
 		return false
 	}
 	var lines [][]string
+	m := scanner.Matched()
+	lines = append(lines, []string{m[0], m[1], m[2]})
 	for !scanner.EOF() {
-		l := scanner.Peek()
-		if m := reList.FindStringSubmatch(l); m != nil {
-			lines = append(lines, []string{l, m[1], m[2]})
-			scanner.Next()
-		} else {
-			// リスト記法でない行は消費せずbreak（他パーサーに渡す）
+		if !scanner.Scan(reList) {
 			break
 		}
+		m := scanner.Matched()
+		lines = append(lines, []string{m[0], m[1], m[2]})
 	}
 	if len(lines) == 0 {
 		return false

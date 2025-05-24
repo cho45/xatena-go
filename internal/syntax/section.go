@@ -33,27 +33,22 @@ func (s *SectionTitleNode) GetContent() []Node {
 type SectionParser struct{}
 
 func (p *SectionParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
-	line := scanner.Peek()
-	m := reSection.FindStringSubmatch(line)
-	if m == nil {
+	if !scanner.Scan(reSection) {
 		return false
 	}
-	scanner.Next() // consume heading
+	m := scanner.Matched()
 	stars := m[1]
 	title := strings.TrimSpace(m[2])
 	level := len(stars)
-	// スペースがない場合（"**", "***" など）は level=1, title="*"または"**" などにする
 	if m[2] == "" {
 		title = stars[1:]
 		level = 1
 	}
 	if level > 3 {
-		// ****foo のような場合も level=1, title=***foo
 		title = strings.Repeat("*", level-1) + title
 		level = 1
 	}
 	sec := &SectionNode{Level: level, Title: title}
-	// stackを巻き戻して親を決定（Xatena.pm互換）
 	for len(*stack) > 0 {
 		if s, ok := (*stack)[len(*stack)-1].(*SectionNode); ok && s.Level >= level {
 			*stack = (*stack)[:len(*stack)-1]

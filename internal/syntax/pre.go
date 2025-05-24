@@ -31,17 +31,15 @@ var rePreStart = regexp.MustCompile(`^>\|$`)
 var rePreEnd = regexp.MustCompile(`^(.*?)\|<$`)
 
 func (p *PreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
-	line := scanner.Peek()
-	if rePreStart.MatchString(line) {
-		scanner.Next() // consume start
+	if scanner.Scan(rePreStart) {
 		node := &PreNode{}
 		parent.AddChild(node)
 		*stack = append(*stack, node)
 		return true
 	}
-	if m := rePreEnd.FindStringSubmatch(line); m != nil {
+	if scanner.Scan(rePreEnd) {
+		m := scanner.Matched()
 		parent.AddChild(&TextNode{Text: m[1]})
-		scanner.Next() // consume end
 		if len(*stack) == 0 {
 			return false
 		}
