@@ -2,8 +2,13 @@ package syntax
 
 import (
 	"context"
+	htmltpl "html/template"
 	"regexp"
 )
+
+var StopPTemplate = htmltpl.Must(htmltpl.New("stopp").Parse(`
+{{.Content}}
+`))
 
 // StopPNode represents a block that disables auto <p>/<br> insertion.
 type StopPNode struct {
@@ -11,9 +16,15 @@ type StopPNode struct {
 }
 
 func (s *StopPNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
-	return ContentToHTML(s, ctx, xatena, CallerOptions{
+	content := ContentToHTML(s, ctx, xatena, CallerOptions{
 		stopp: true,
 	})
+	params := map[string]interface{}{"Content": htmltpl.HTML(content)}
+	html, err := xatena.ExecuteTemplate("stopp", params)
+	if err != nil {
+		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
+	}
+	return html
 }
 func (s *StopPNode) AddChild(n Node) {
 	s.Content = append(s.Content, n)

@@ -4,8 +4,18 @@ import (
 	"context"
 	htmltpl "html/template"
 	"regexp"
-	"strings"
 )
+
+var DefinitionListTemplate = htmltpl.Must(htmltpl.New("definitionlist").Parse(`
+<dl>
+{{- range .Items}}
+  <dt>{{.Term}}</dt>
+  {{- range .Descs}}
+  <dd>{{.}}</dd>
+  {{- end}}
+{{- end}}
+</dl>
+`))
 
 var reDefinitionList = regexp.MustCompile(`^:([^:]+):(.*)$`)
 var reDefinitionListCont = regexp.MustCompile(`^::(.*)$`)
@@ -19,16 +29,6 @@ type DefinitionItemNode struct {
 	Term  string
 	Descs []string // 複数のddを保持
 }
-
-var DefinitionListTemplate = htmltpl.Must(htmltpl.New("definitionlist").Parse(`
-<dl>
-{{- range .}}
-  <dt>{{.Term}}</dt>
-  {{- range .Descs}}
-  <dd>{{.}}</dd>
-  {{- end}}
-{{- end}}
-</dl>`))
 
 func (d *DefinitionListNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	type item struct {
@@ -47,9 +47,12 @@ func (d *DefinitionListNode) ToHTML(ctx context.Context, xatena XatenaContext, o
 			Descs: descs,
 		})
 	}
-	var sb strings.Builder
-	DefinitionListTemplate.Execute(&sb, items)
-	return sb.String()
+	params := map[string]interface{}{"Items": items}
+	html, err := xatena.ExecuteTemplate("definitionlist", params)
+	if err != nil {
+		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
+	}
+	return html
 }
 
 func (d *DefinitionListNode) AddChild(n Node) {

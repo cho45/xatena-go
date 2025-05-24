@@ -2,8 +2,13 @@ package syntax
 
 import (
 	"context"
+	htmltpl "html/template"
 	"regexp"
 )
+
+var PreTemplate = htmltpl.Must(htmltpl.New("pre").Parse(`
+<pre>{{.Content}}</pre>
+`))
 
 // PreNode represents a <pre> block (stopp block with <pre> wrapper)
 type PreNode struct {
@@ -14,7 +19,12 @@ func (p *PreNode) ToHTML(ctx context.Context, xatena XatenaContext, options Call
 	content := ContentToHTML(p, ctx, xatena, CallerOptions{
 		stopp: true,
 	})
-	return "<pre>" + content + "</pre>"
+	params := map[string]interface{}{"Content": htmltpl.HTML(content)}
+	html, err := xatena.ExecuteTemplate("pre", params)
+	if err != nil {
+		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
+	}
+	return html
 }
 
 func (p *PreNode) AddChild(n Node) {

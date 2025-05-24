@@ -12,6 +12,7 @@ type CallerOptions struct {
 
 type XatenaContext interface {
 	GetInline() Inline
+	ExecuteTemplate(name string, params map[string]interface{}) (string, error)
 }
 
 type Node interface {

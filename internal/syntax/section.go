@@ -7,6 +7,13 @@ import (
 	"strings"
 )
 
+var SectionTemplate = htmltpl.Must(htmltpl.New("section").Parse(`
+<div class="section">
+<h{{.Level}}>{{.Title}}</h{{.Level}}>
+{{.Content}}
+</div>
+`))
+
 var reSection = regexp.MustCompile(`^(\*+)(\s*.*)$`)
 
 // SectionNode represents a section (heading + content)
@@ -65,20 +72,17 @@ func (p *SectionParser) Parse(scanner *LineScanner, parent HasContent, stack *[]
 }
 
 func (s *SectionNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
-	tmpl := `
-<div class="section">
-<h{{.Level}}>{{.Title}}</h{{.Level}}>
-{{.Content}}
-</div>`
 	inline := xatena.GetInline()
 	title := inline.Format(ctx, s.Title)
 	content := ContentToHTML(s, ctx, xatena, options)
-	var sb strings.Builder
-	t := htmltpl.Must(htmltpl.New("section").Parse(tmpl))
-	_ = t.Execute(&sb, map[string]interface{}{
+	params := map[string]interface{}{
 		"Level":   s.Level + 2,
 		"Title":   htmltpl.HTML(title),
 		"Content": htmltpl.HTML(content),
-	})
-	return sb.String()
+	}
+	html, err := xatena.ExecuteTemplate("section", params)
+	if err != nil {
+		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
+	}
+	return html
 }

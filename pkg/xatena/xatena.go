@@ -2,6 +2,8 @@ package xatena
 
 import (
 	"context"
+	htmltpl "html/template"
+	"strings"
 
 	"github.com/cho45/xatena-go/internal/syntax"
 )
@@ -10,12 +12,25 @@ import (
 // 今後オプションや拡張もここに集約
 
 type Xatena struct {
-	Inline syntax.Inline
+	Inline    syntax.Inline
+	Templates map[string]*htmltpl.Template // テンプレート名→テンプレート
 }
 
 func NewXatenaWithInline(inline syntax.Inline) *Xatena {
 	return &Xatena{
 		Inline: inline,
+		Templates: map[string]*htmltpl.Template{
+			"blockquote":     syntax.BlockquoteTemplate,
+			"definitionlist": syntax.DefinitionListTemplate,
+			"list":           syntax.ListTemplate,
+			"section":        syntax.SectionTemplate,
+			"table":          syntax.TableTemplate,
+			"seemore":        syntax.SeeMoreTemplate,
+			"pre":            syntax.PreTemplate,
+			"stopp":          syntax.StopPTemplate,
+			"superpre":       syntax.SuperPreTemplate,
+			"comment":        syntax.CommentTemplate,
+		},
 	}
 }
 
@@ -69,6 +84,27 @@ func (x *Xatena) ToHTML(ctx context.Context, input string) string {
 
 func (x *Xatena) GetInline() syntax.Inline {
 	return x.Inline
+}
+
+func (x *Xatena) ExecuteTemplate(name string, params map[string]interface{}) (string, error) {
+	tmpl, ok := x.Templates[name]
+	if !ok {
+		return "", &TemplateNotFoundError{name}
+	}
+	var sb strings.Builder
+	err := tmpl.Execute(&sb, params)
+	if err != nil {
+		return "", err
+	}
+	return sb.String(), nil
+}
+
+type TemplateNotFoundError struct {
+	Name string
+}
+
+func (e *TemplateNotFoundError) Error() string {
+	return "template not found: " + e.Name
 }
 
 func (x *Xatena) GetBlockquoteTemplate() interface{} {

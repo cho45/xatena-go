@@ -2,13 +2,24 @@ package syntax
 
 import (
 	"context"
+	htmltpl "html/template"
 	"regexp"
 )
+
+var CommentTemplate = htmltpl.Must(htmltpl.New("comment").Parse(`
+{{.Content}}
+`))
 
 type CommentNode struct{}
 
 func (c *CommentNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
-	return "<!-- -->"
+	html, err := xatena.ExecuteTemplate("comment", map[string]interface{}{
+		"Content": htmltpl.HTML("<!-- -->"),
+	})
+	if err != nil {
+		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
+	}
+	return html
 }
 func (c *CommentNode) AddChild(n Node)    {}
 func (c *CommentNode) GetContent() []Node { return nil }

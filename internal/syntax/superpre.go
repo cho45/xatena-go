@@ -2,11 +2,17 @@ package syntax
 
 import (
 	"context"
+	htmltpl "html/template"
 	"regexp"
 	"strings"
+	"text/template"
 
 	"github.com/cho45/xatena-go/internal/util"
 )
+
+var SuperPreTemplate = htmltpl.Must(htmltpl.New("superpre").Parse(`
+<pre class="{{.Class}}">{{.RawText}}</pre>
+`))
 
 // SuperPreNode represents a <pre> block with HTML-escaped content (super pre)
 type SuperPreNode struct {
@@ -20,7 +26,15 @@ func (s *SuperPreNode) ToHTML(ctx context.Context, xatena XatenaContext, options
 	if s.Lang != "" {
 		langClass = " lang-" + s.Lang
 	}
-	return `<pre class="` + className + langClass + `">` + util.EscapeHTML(s.RawText) + `</pre>`
+	params := map[string]interface{}{
+		"Class":   className + langClass,
+		"RawText": htmltpl.HTML(util.EscapeHTML(s.RawText)),
+	}
+	html, err := xatena.ExecuteTemplate("superpre", params)
+	if err != nil {
+		return `<div class="xatena-template-error">template error: ` + template.HTMLEscapeString(err.Error()) + `</div>`
+	}
+	return html
 }
 
 func (s *SuperPreNode) AddChild(n Node) {

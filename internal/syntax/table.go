@@ -7,16 +7,6 @@ import (
 	"strings"
 )
 
-// TableNode represents a table block
-type TableNode struct {
-	Rows [][]TableCellNode
-}
-
-type TableCellNode struct {
-	IsHeader bool
-	Content  string
-}
-
 var TableTemplate = htmltpl.Must(htmltpl.New("table").Parse(`
 <table>
 {{- range .}}
@@ -27,6 +17,16 @@ var TableTemplate = htmltpl.Must(htmltpl.New("table").Parse(`
   </tr>
 {{- end}}
 </table>`))
+
+// TableNode represents a table block
+type TableNode struct {
+	Rows [][]TableCellNode
+}
+
+type TableCellNode struct {
+	IsHeader bool
+	Content  string
+}
 
 func (t *TableNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	type cell struct {
@@ -76,9 +76,7 @@ func (p *TableParser) Parse(scanner *LineScanner, parent HasContent, stack *[]Ha
 	}
 
 	node := &TableNode{Rows: rows}
-	if add, ok := parent.(interface{ AddChild(Node) }); ok {
-		add.AddChild(node)
-	}
+	parent.AddChild(node)
 	*stack = append(*stack, node)
 	return true
 }

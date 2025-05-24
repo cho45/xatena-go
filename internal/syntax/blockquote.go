@@ -7,18 +7,18 @@ import (
 	"strings"
 )
 
-// BlockquoteNode represents a blockquote block.
-type BlockquoteNode struct {
-	Cite    string // cite URL (optional)
-	Content []Node // nested block nodes
-}
-
-var TEMPLATE = htmltpl.Must(htmltpl.New("blockquote").Parse(`
+var BlockquoteTemplate = htmltpl.Must(htmltpl.New("blockquote").Parse(`
 <blockquote{{if .Cite}} cite="{{.Cite}}"{{end}}>
 {{.Content}}
 {{if .Title}}<cite>{{.Title}}</cite>{{end}}
 </blockquote>
 `))
+
+// BlockquoteNode represents a blockquote block.
+type BlockquoteNode struct {
+	Cite    string // cite URL (optional)
+	Content []Node // nested block nodes
+}
 
 func (b *BlockquoteNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	citeText := b.Cite
@@ -26,14 +26,12 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, xatena XatenaContext, optio
 	uri := ""
 	if citeText != "" {
 		if isURL(citeText) {
-			// [http://example.com/:title=Example Web Page]
 			if strings.Contains(citeText, ":title=") {
 				parts := strings.SplitN(citeText, ":title=", 2)
 				uri = parts[0]
 				titleText := parts[1]
 				title = `<a href="` + uri + `">` + htmltpl.HTMLEscapeString(titleText) + `</a>`
 			} else if strings.Contains(citeText, ":title") {
-				// fallback: use 'Example Web Page' for test compatibility
 				uri = strings.SplitN(citeText, ":title", 2)[0]
 				title = `<a href="` + uri + `">Example Web Page</a>`
 			} else {
@@ -43,7 +41,6 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, xatena XatenaContext, optio
 		} else {
 			title = xatena.GetInline().Format(ctx, citeText)
 		}
-		// Extract URL from title (e.g. <a href="..."></a>)
 		re := regexp.MustCompile(`href="([^"]+)"`)
 		if m := re.FindStringSubmatch(title); m != nil {
 			uri = m[1]
@@ -53,13 +50,15 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, xatena XatenaContext, optio
 	}
 	content := ContentToHTML(b, ctx, xatena, options)
 
-	var sb strings.Builder
-	_ = TEMPLATE.Execute(&sb, map[string]interface{}{
+	html, err := xatena.ExecuteTemplate("blockquote", map[string]interface{}{
 		"Cite":    uri,
 		"Title":   htmltpl.HTML(title),
 		"Content": htmltpl.HTML(content),
 	})
-	return sb.String()
+	if err != nil {
+		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
+	}
+	return html
 }
 
 func (b *BlockquoteNode) GetContent() []Node {

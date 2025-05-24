@@ -2,8 +2,17 @@ package syntax
 
 import (
 	"context"
+	htmltpl "html/template"
 	"regexp"
 )
+
+var ListTemplate = htmltpl.Must(htmltpl.New("list").Parse(`
+{{.OpenTag}}
+{{range .Items}}
+  <li>{{range .Content}}{{.}}{{end}}</li>
+{{end}}
+{{.CloseTag}}
+`))
 
 // ListNode represents a list block (ordered or unordered)
 type ListNode struct {
@@ -20,29 +29,36 @@ type ListItemNode struct {
 }
 
 func (l *ListNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
-	html := ""
-	inline := xatena.GetInline()
+	var html string
 	for _, list := range l.Items {
-		html += listToHTML(list, ctx, inline)
+		html += listStructToHTML(list, ctx, xatena)
 	}
 	return html
 }
 
-func listToHTML(list *ListStructNode, ctx context.Context, inline Inline) string {
-	html := "\n<" + list.Name + ">\n"
+// 1つのListStructNode（ul/ol）を再帰的にHTML化
+func listStructToHTML(list *ListStructNode, ctx context.Context, xatena XatenaContext) string {
+	var items []map[string]interface{}
 	for _, item := range list.Items {
-		html += "<li>"
+		var content []interface{}
 		for _, child := range item.Content {
 			switch v := child.(type) {
 			case string:
-				html += inline.Format(ctx, v)
+				content = append(content, htmltpl.HTML(xatena.GetInline().Format(ctx, v)))
 			case *ListStructNode:
-				html += listToHTML(v, ctx, inline)
+				content = append(content, htmltpl.HTML(listStructToHTML(v, ctx, xatena)))
 			}
 		}
-		html += "</li>\n"
+		items = append(items, map[string]interface{}{"Content": content})
 	}
-	html += "</" + list.Name + ">\n"
+	html, err := xatena.ExecuteTemplate("list", map[string]interface{}{
+		"OpenTag":  htmltpl.HTML("<" + list.Name + ">"),
+		"CloseTag": htmltpl.HTML("</" + list.Name + ">"),
+		"Items":    items,
+	})
+	if err != nil {
+		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
+	}
 	return html
 }
 
