@@ -3,7 +3,7 @@
 
 てすとてすと
 
-http://example.com
+[http://example.com:title] http://example.com
 
 >>
 blockquote

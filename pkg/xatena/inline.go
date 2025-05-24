@@ -170,3 +170,7 @@ func (f *InlineFormatter) Format(s string) string {
 func (f *InlineFormatter) Footnotes() []Footnote {
 	return f.footnotes
 }
+
+func (f *InlineFormatter) SetTitleHandler(handler func(uri string) string) {
+	f.titleHandler = handler
+}

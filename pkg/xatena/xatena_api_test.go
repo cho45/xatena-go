@@ -19,9 +19,9 @@ func TestXatenaCLIEquivalent(t *testing.T) {
 
 func TestInlineFormatterCustomTitleHandler(t *testing.T) {
 	formatter := NewInlineFormatter(func(f *InlineFormatter) {
-		f.titleHandler = func(uri string) string {
+		f.SetTitleHandler(func(uri string) string {
 			return "カスタムタイトル"
-		}
+		})
 	})
 	input := "[http://example.com:title]"
 	output := formatter.Format(input)

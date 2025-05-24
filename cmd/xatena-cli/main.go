@@ -17,7 +17,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	x := xatena.NewXatena()
+	formatter := xatena.NewInlineFormatter(func(f *xatena.InlineFormatter) {
+		f.SetTitleHandler(func(uri string) string {
+			return "カスタムタイトル"
+		})
+	})
+
+	x := xatena.NewXatenaWithInline(formatter)
 	output := x.ToHTML(context.Background(), string(input))
 	fmt.Print(strings.TrimRight(output, "\n"))
 }
