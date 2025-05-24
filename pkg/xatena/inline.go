@@ -14,8 +14,9 @@ type InlineRule struct {
 }
 
 type InlineFormatter struct {
-	footnotes []Footnote
-	rules     []InlineRule
+	footnotes    []Footnote
+	rules        []InlineRule
+	titleHandler func(uri string) string // 追加
 }
 
 type Footnote struct {
@@ -35,17 +36,25 @@ func (f *InlineFormatter) AddRuleAt(index int, rule InlineRule) {
 	f.rules = append(f.rules[:index], append([]InlineRule{rule}, f.rules[index:]...)...)
 }
 
-func NewInlineFormatter() *InlineFormatter {
+func defaultTitleHandler(uri string) string {
+	return uri
+}
+
+func NewInlineFormatter(opts ...func(*InlineFormatter)) *InlineFormatter {
 	f := &InlineFormatter{
-		footnotes: []Footnote{},
+		footnotes:    []Footnote{},
+		titleHandler: defaultTitleHandler, // 追加
 	}
 	// デフォルトルールを登録
-	f.rules = defaultInlineRules()
+	f.rules = defaultInlineRules(f)
+	for _, opt := range opts {
+		opt(f)
+	}
 	return f
 }
 
 // デフォルトルール群を返す
-func defaultInlineRules() []InlineRule {
+func defaultInlineRules(f *InlineFormatter) []InlineRule {
 	return []InlineRule{
 		{
 			Pattern: regexp.MustCompile(`\[\]([\s\S]*?)\[\]`),
@@ -88,9 +97,12 @@ func defaultInlineRules() []InlineRule {
 					return fmt.Sprintf(`<img src="http://chart.apis.google.com/chart?chs=150x150&cht=qr&chl=%s" title="%s"/>`, url.QueryEscape(uri), html.EscapeString(uri))
 				}
 				if strings.HasPrefix(opt, ":title") {
-					return fmt.Sprintf(`<a href="%s">%s</a>`, uri, html.EscapeString(title))
+					if title != "" {
+						return fmt.Sprintf(`<a href="%s">%s</a>`, uri, html.EscapeString(title))
+					}
+					return fmt.Sprintf(`<a href="%s">%s</a>`, uri, html.EscapeString(f.titleHandler(uri)))
 				}
-				return fmt.Sprintf(`<a href="%s">%s</a>`, uri, uri)
+				return fmt.Sprintf(`<a href="%s">%s</a>`, uri, html.EscapeString(uri))
 			},
 		},
 		{
@@ -135,7 +147,7 @@ func defaultInlineRules() []InlineRule {
 func (f *InlineFormatter) Format(s string) string {
 	s = strings.TrimPrefix(s, "\n")
 	if len(f.rules) == 0 {
-		f.rules = defaultInlineRules()
+		f.rules = defaultInlineRules(f)
 	}
 	// すべてのパターンを | で結合した大きな正規表現を作成
 	var patterns []string
