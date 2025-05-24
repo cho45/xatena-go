@@ -2,7 +2,9 @@ package syntax
 
 import (
 	"context"
+	htmltpl "html/template"
 	"regexp"
+	"strings"
 )
 
 var reDefinitionList = regexp.MustCompile(`^:([^:]+):(.*)$`)
@@ -18,16 +20,35 @@ type DefinitionItemNode struct {
 	Descs []string // 複数のddを保持
 }
 
+var DefinitionListTemplate = htmltpl.Must(htmltpl.New("definitionlist").Parse(`
+<dl>
+{{- range .}}
+  <dt>{{.Term}}</dt>
+  {{- range .Descs}}
+  <dd>{{.}}</dd>
+  {{- end}}
+{{- end}}
+</dl>`))
+
 func (d *DefinitionListNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	html := "<dl>\n"
-	for _, item := range d.Items {
-		html += "  <dt>" + inline.Format(item.Term) + "</dt>\n"
-		for _, desc := range item.Descs {
-			html += "  <dd>" + inline.Format(desc) + "</dd>\n"
-		}
+	type item struct {
+		Term  htmltpl.HTML
+		Descs []htmltpl.HTML
 	}
-	html += "</dl>"
-	return html
+	var items []item
+	for _, it := range d.Items {
+		var descs []htmltpl.HTML
+		for _, desc := range it.Descs {
+			descs = append(descs, htmltpl.HTML(inline.Format(desc)))
+		}
+		items = append(items, item{
+			Term:  htmltpl.HTML(inline.Format(it.Term)),
+			Descs: descs,
+		})
+	}
+	var sb strings.Builder
+	_ = DefinitionListTemplate.Execute(&sb, items)
+	return sb.String()
 }
 
 func (d *DefinitionListNode) AddChild(n Node) {

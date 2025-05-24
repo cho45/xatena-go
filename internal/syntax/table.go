@@ -2,6 +2,7 @@ package syntax
 
 import (
 	"context"
+	htmltpl "html/template"
 	"regexp"
 	"strings"
 )
@@ -16,21 +17,38 @@ type TableCellNode struct {
 	Content  string
 }
 
+var TableTemplate = htmltpl.Must(htmltpl.New("table").Parse(`
+<table>
+{{- range .}}
+  <tr>
+  {{- range .}}
+    {{if .IsHeader}}<th>{{.Content}}</th>{{else}}<td>{{.Content}}</td>{{end}}
+  {{- end}}
+  </tr>
+{{- end}}
+</table>`))
+
 func (t *TableNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	html := "<table>\n"
-	for _, row := range t.Rows {
-		html += "  <tr>\n"
-		for _, cell := range row {
-			if cell.IsHeader {
-				html += "    <th>" + inline.Format(cell.Content) + "</th>\n"
-			} else {
-				html += "    <td>" + inline.Format(cell.Content) + "</td>\n"
-			}
-		}
-		html += "  </tr>\n"
+	type cell struct {
+		IsHeader bool
+		Content  htmltpl.HTML
 	}
-	html += "</table>"
-	return html
+	type row []cell
+	var rows []row
+	for _, r := range t.Rows {
+		var rowCells row
+		for _, c := range r {
+			rowCells = append(rowCells, cell{
+				IsHeader: c.IsHeader,
+				Content:  htmltpl.HTML(inline.Format(c.Content)),
+			})
+		}
+		rows = append(rows, rowCells)
+	}
+
+	var sb strings.Builder
+	_ = TableTemplate.Execute(&sb, rows)
+	return sb.String()
 }
 
 func (t *TableNode) AddChild(n Node) {
