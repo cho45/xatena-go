@@ -65,11 +65,7 @@ func (p *DefinitionListParser) Parse(scanner *LineScanner, parent HasContent, st
 	for _, line := range lines {
 		if m := reDefinitionListCont.FindStringSubmatch(line); m != nil {
 			// ::description
-			if len(currentDescs) > 0 {
-				currentDescs[len(currentDescs)-1] += m[1]
-			} else {
-				currentDescs = append(currentDescs, m[1])
-			}
+			currentDescs = append(currentDescs, m[1])
 		} else if m := reDefinitionList.FindStringSubmatch(line); m != nil {
 			// :term:desc
 			if currentTerm != "" {
@@ -87,9 +83,6 @@ func (p *DefinitionListParser) Parse(scanner *LineScanner, parent HasContent, st
 		items = append(items, DefinitionItemNode{Term: currentTerm, Descs: currentDescs})
 	}
 	node := &DefinitionListNode{Items: items}
-	if add, ok := parent.(interface{ AddChild(Node) }); ok {
-		add.AddChild(node)
-	}
-	*stack = append(*stack, node)
+	parent.AddChild(node)
 	return true
 }
