@@ -2,6 +2,7 @@ package syntax
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -19,6 +20,17 @@ type RootNode struct {
 	Content []Node
 }
 
+func SplitForBreak(text string) []string {
+	if text == "" {
+		return []string{}
+	}
+	parts := strings.Split(text, "\n")
+	for len(parts) > 0 && parts[len(parts)-1] == "" {
+		parts = parts[:len(parts)-1]
+	}
+	return parts
+}
+
 func ToHTMLParagraph(text string, inline Inline) string {
 	text = inline.Format(text)
 	re := regexp.MustCompile(`(\n{2,})`)
@@ -29,7 +41,10 @@ func ToHTMLParagraph(text string, inline Inline) string {
 		if regexp.MustCompile(`^\n+$`).MatchString(para) {
 			html += "</p>" + strings.Repeat("<br />\n", (len(para)-2)) + "<p>"
 		} else {
-			html += strings.Join(strings.Split(para, "\n"), "<br />\n")
+			fmt.Printf("para: %q\n", para)
+			if para != "\n" {
+				html += strings.Join(SplitForBreak(para), "<br />\n")
+			}
 		}
 	}
 	html += "</p>"
@@ -40,10 +55,11 @@ func ContentToHTML(r HasContent, ctx context.Context, inline Inline) string {
 	html := ""
 	var textBuf []string
 	flushParagraph := func() {
-		if len(textBuf) > 0 {
+		hasText := strings.Join(textBuf, "") != ""
+		if hasText {
 			html += ToHTMLParagraph(strings.Join(textBuf, "\n"), inline)
-			textBuf = nil
 		}
+		textBuf = nil
 	}
 	for _, n := range r.GetContent() {
 		if t, ok := n.(*TextNode); ok {

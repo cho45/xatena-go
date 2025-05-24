@@ -32,6 +32,8 @@ func NewInlineFormatter() *InlineFormatter {
 }
 
 func (f *InlineFormatter) Format(s string) string {
+	s = strings.TrimPrefix(s, "\n")
+
 	// Perlのmatch順に正規表現を適用
 	// 1. [[]...[]] などの特殊なアンリンク
 	s = regexp.MustCompile(`\[\]([\s\S]*?)\[\]`).ReplaceAllStringFunc(s, func(m string) string {
