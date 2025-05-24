@@ -1,11 +1,11 @@
 # xatena-go
 
-Go実装の [はてな記法](https://hatena.github.io/text-hatena/) → HTML変換ライブラリ & CLI
+Go実装の [はてな記法](https://help.hatenablog.com/entry/text-hatena-list ) → HTML変換ライブラリ & CLI
 
 ## 概要
 
 - はてな記法をHTMLに変換するGoライブラリ・コマンドラインツールです。
-- Perl版 [Text::Xatena](https://github.com/hatena/Text-Xatena) のGo移植。
+- Perl版 [Text::Xatena](https://github.com/cho45/Text-Xatena ) のGo移植。
 - パーサ・ノード構造・テストケースもPerl版に準拠。
 
 ## ディレクトリ構成
