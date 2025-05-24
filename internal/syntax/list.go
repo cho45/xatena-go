@@ -116,9 +116,6 @@ func (p *ListParser) Parse(scanner *LineScanner, parent HasContent, stack *[]Has
 		listStack[len(listStack)-1].Items = append(listStack[len(listStack)-1].Items, item)
 	}
 	node := &ListNode{Items: ret}
-	if add, ok := parent.(interface{ AddChild(Node) }); ok {
-		add.AddChild(node)
-	}
-	*stack = append(*stack, node)
+	parent.AddChild(node)
 	return true
 }
