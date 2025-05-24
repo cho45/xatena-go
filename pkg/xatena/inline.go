@@ -155,11 +155,6 @@ func (f *InlineFormatter) Format(s string) string {
 	return result
 }
 
-func stripTags(s string) string {
-	re := regexp.MustCompile(`<[^>]+>`)
-	return re.ReplaceAllString(s, "")
-}
-
 func (f *InlineFormatter) Footnotes() []Footnote {
 	return f.footnotes
 }
