@@ -1,0 +1,10 @@
+
+* はてな記法パーサー Text-Xatena
+
+てすとてすと
+
+http://example.com
+
+>>
+blockquote
+<<
