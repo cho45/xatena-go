@@ -14,9 +14,17 @@ import (
 	"github.com/cho45/xatena-go/pkg/xatena"
 )
 
-func getTitle(uri string) string {
-	client := &http.Client{Timeout: 5 * time.Second}
-	resp, err := client.Get(uri)
+var httpClient = &http.Client{Timeout: 5 * time.Second}
+
+func getTitle(ctx context.Context, uri string) string {
+	req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "[getTitle] failed to create request for %s: %v\n", uri, err)
+		return uri
+	}
+	req.Header.Set("User-Agent", "xatena-cli/1.0 (+https://github.com/cho45/xatena-go)")
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[getTitle] failed to GET %s: %v\n", uri, err)
 		return uri // 失敗時はURLを返す
@@ -26,7 +34,10 @@ func getTitle(uri string) string {
 		fmt.Fprintf(os.Stderr, "[getTitle] non-2xx status for %s: %d\n", uri, resp.StatusCode)
 		return uri
 	}
-	z := html.NewTokenizer(resp.Body)
+	// レスポンスボディのサイズ制限
+	const maxBodySize = 2 * 1024 * 1024 // 2MB
+	limitedBody := io.LimitReader(resp.Body, maxBodySize)
+	z := html.NewTokenizer(limitedBody)
 	for {
 		tt := z.Next()
 		switch tt {
@@ -42,7 +53,7 @@ func getTitle(uri string) string {
 				if z.Next() == html.TextToken {
 					title := strings.TrimSpace(z.Token().Data)
 					if title != "" {
-						return title
+						return html.UnescapeString(title)
 					}
 				}
 			}

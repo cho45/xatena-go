@@ -1,5 +1,7 @@
 package syntax
 
+import "context"
+
 type Inline interface {
-	Format(s string) string
+	Format(ctx context.Context, s string) string
 }

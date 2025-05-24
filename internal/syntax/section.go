@@ -70,7 +70,7 @@ func (s *SectionNode) ToHTML(ctx context.Context, inline Inline, options CallerO
 <h{{.Level}}>{{.Title}}</h{{.Level}}>
 {{.Content}}
 </div>`
-	title := inline.Format(s.Title)
+	title := inline.Format(ctx, s.Title)
 	content := ContentToHTML(s, ctx, inline, options)
 	var sb strings.Builder
 	t := htmltpl.Must(htmltpl.New("section").Parse(tmpl))

@@ -34,8 +34,8 @@ func SplitForBreak(text string) []string {
 	return parts
 }
 
-func ToHTMLParagraph(text string, inline Inline, options CallerOptions) string {
-	text = inline.Format(text)
+func ToHTMLParagraph(ctx context.Context, text string, inline Inline, options CallerOptions) string {
+	text = inline.Format(ctx, text)
 	if options.stopp {
 		return text
 	}
@@ -60,7 +60,7 @@ func ContentToHTML(r HasContent, ctx context.Context, inline Inline, options Cal
 	flushParagraph := func() {
 		hasText := strings.Join(textBuf, "") != ""
 		if hasText {
-			html += ToHTMLParagraph(strings.Join(textBuf, "\n"), inline, options)
+			html += ToHTMLParagraph(ctx, strings.Join(textBuf, "\n"), inline, options)
 		}
 		textBuf = nil
 	}

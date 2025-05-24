@@ -39,15 +39,15 @@ func (d *DefinitionListNode) ToHTML(ctx context.Context, inline Inline, options 
 	for _, it := range d.Items {
 		var descs []htmltpl.HTML
 		for _, desc := range it.Descs {
-			descs = append(descs, htmltpl.HTML(inline.Format(desc)))
+			descs = append(descs, htmltpl.HTML(inline.Format(ctx, desc)))
 		}
 		items = append(items, item{
-			Term:  htmltpl.HTML(inline.Format(it.Term)),
+			Term:  htmltpl.HTML(inline.Format(ctx, it.Term)),
 			Descs: descs,
 		})
 	}
 	var sb strings.Builder
-	_ = DefinitionListTemplate.Execute(&sb, items)
+	DefinitionListTemplate.Execute(&sb, items)
 	return sb.String()
 }
 

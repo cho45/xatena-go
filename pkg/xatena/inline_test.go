@@ -1,6 +1,7 @@
 package xatena
 
 import (
+	"context"
 	"testing"
 )
 
@@ -54,7 +55,7 @@ func TestInlineFormatter_Format(t *testing.T) {
 
 	for _, c := range cases {
 		f := NewInlineFormatter()
-		got := f.Format(c.input)
+		got := f.Format(context.Background(), c.input)
 		if got != c.expect {
 			t.Errorf("%s: input=%q\nexpect=%q\ngot   =%q", c.name, c.input, c.expect, got)
 		}

@@ -34,7 +34,7 @@ func listToHTML(list *ListStructNode, ctx context.Context, inline Inline) string
 		for _, child := range item.Content {
 			switch v := child.(type) {
 			case string:
-				html += inline.Format(v)
+				html += inline.Format(ctx, v)
 			case *ListStructNode:
 				html += listToHTML(v, ctx, inline)
 			}

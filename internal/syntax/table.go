@@ -40,14 +40,13 @@ func (t *TableNode) ToHTML(ctx context.Context, inline Inline, options CallerOpt
 		for _, c := range r {
 			rowCells = append(rowCells, cell{
 				IsHeader: c.IsHeader,
-				Content:  htmltpl.HTML(inline.Format(c.Content)),
+				Content:  htmltpl.HTML(inline.Format(ctx, c.Content)),
 			})
 		}
 		rows = append(rows, rowCells)
 	}
-
 	var sb strings.Builder
-	_ = TableTemplate.Execute(&sb, rows)
+	TableTemplate.Execute(&sb, rows)
 	return sb.String()
 }
 

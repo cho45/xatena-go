@@ -38,10 +38,10 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, inline Inline, options Call
 				title = `<a href="` + uri + `">Example Web Page</a>`
 			} else {
 				uri = citeText
-				title = inline.Format("[" + citeText + "]")
+				title = inline.Format(ctx, "["+citeText+"]")
 			}
 		} else {
-			title = inline.Format(citeText)
+			title = inline.Format(ctx, citeText)
 		}
 		// Extract URL from title (e.g. <a href="..."></a>)
 		re := regexp.MustCompile(`href="([^"]+)"`)
