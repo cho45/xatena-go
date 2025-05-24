@@ -9,7 +9,7 @@ import (
 // (==== or ===== line)
 type SeeMoreNode struct {
 	IsSuper  bool
-	children []Node
+	Content []Node
 }
 
 func (s *SeeMoreNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
@@ -18,11 +18,11 @@ func (s *SeeMoreNode) ToHTML(ctx context.Context, inline Inline, options CallerO
 }
 
 func (s *SeeMoreNode) AddChild(n Node) {
-	s.children = append(s.children, n)
+	s.Content = append(s.Content, n)
 }
 
 func (s *SeeMoreNode) GetContent() []Node {
-	return s.children
+	return s.Content
 }
 
 type SeeMoreParser struct{}

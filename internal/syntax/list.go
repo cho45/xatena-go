@@ -16,7 +16,7 @@ type ListStructNode struct {
 }
 
 type ListItemNode struct {
-	Children []interface{} // string or *ListStructNode
+	Content []interface{} // string or *ListStructNode
 }
 
 func (l *ListNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
@@ -31,7 +31,7 @@ func listToHTML(list *ListStructNode, ctx context.Context, inline Inline) string
 	html := "\n<" + list.Name + ">\n"
 	for _, item := range list.Items {
 		html += "<li>"
-		for _, child := range item.Children {
+		for _, child := range item.Content {
 			switch v := child.(type) {
 			case string:
 				html += inline.Format(v)
@@ -102,9 +102,9 @@ func (p *ListParser) Parse(scanner *LineScanner, parent HasContent, stack *[]Has
 				lastItems := listStack[len(listStack)-1].Items
 				if len(lastItems) > 0 {
 					lastLi := lastItems[len(lastItems)-1]
-					lastLi.Children = append(lastLi.Children, container)
+					lastLi.Content = append(lastLi.Content, container)
 				} else {
-					item := &ListItemNode{Children: []interface{}{container}}
+					item := &ListItemNode{Content: []interface{}{container}}
 					listStack[len(listStack)-1].Items = append(listStack[len(listStack)-1].Items, item)
 				}
 			} else {
@@ -112,7 +112,7 @@ func (p *ListParser) Parse(scanner *LineScanner, parent HasContent, stack *[]Has
 			}
 			listStack = append(listStack, container)
 		}
-		item := &ListItemNode{Children: []interface{}{text}}
+		item := &ListItemNode{Content: []interface{}{text}}
 		listStack[len(listStack)-1].Items = append(listStack[len(listStack)-1].Items, item)
 	}
 	node := &ListNode{Items: ret}

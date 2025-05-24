@@ -7,7 +7,7 @@ import (
 
 // StopPNode represents a block that disables auto <p>/<br> insertion.
 type StopPNode struct {
-	children []Node
+	Content []Node
 }
 
 func (s *StopPNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
@@ -16,11 +16,11 @@ func (s *StopPNode) ToHTML(ctx context.Context, inline Inline, options CallerOpt
 	})
 }
 func (s *StopPNode) AddChild(n Node) {
-	s.children = append(s.children, n)
+	s.Content = append(s.Content, n)
 }
 
 func (s *StopPNode) GetContent() []Node {
-	return s.children
+	return s.Content
 }
 
 type StopPParser struct{}
