@@ -2,7 +2,6 @@ package syntax
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -41,10 +40,7 @@ func ToHTMLParagraph(text string, inline Inline) string {
 		if regexp.MustCompile(`^\n+$`).MatchString(para) {
 			html += "</p>" + strings.Repeat("<br />\n", (len(para)-2)) + "<p>"
 		} else {
-			fmt.Printf("para: %q\n", para)
-			if para != "\n" {
-				html += strings.Join(SplitForBreak(para), "<br />\n")
-			}
+			html += strings.Join(SplitForBreak(para), "<br />\n")
 		}
 	}
 	html += "</p>"
