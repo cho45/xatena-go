@@ -19,7 +19,7 @@ type ListItemNode struct {
 	Children []interface{} // string or *ListStructNode
 }
 
-func (l *ListNode) ToHTML(ctx context.Context, inline Inline) string {
+func (l *ListNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
 	html := ""
 	for _, list := range l.Items {
 		html += listToHTML(list, ctx, inline)

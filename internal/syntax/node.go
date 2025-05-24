@@ -6,8 +6,12 @@ import (
 	"strings"
 )
 
+type CallerOptions struct {
+	stopp bool
+}
+
 type Node interface {
-	ToHTML(ctx context.Context, inline Inline) string
+	ToHTML(ctx context.Context, inline Inline, options CallerOptions) string
 }
 
 type HasContent interface {
@@ -30,8 +34,11 @@ func SplitForBreak(text string) []string {
 	return parts
 }
 
-func ToHTMLParagraph(text string, inline Inline) string {
+func ToHTMLParagraph(text string, inline Inline, options CallerOptions) string {
 	text = inline.Format(text)
+	if options.stopp {
+		return text
+	}
 	re := regexp.MustCompile(`(\n{2,})`)
 	parts := reSplitWithSep(re, text)
 
@@ -47,13 +54,13 @@ func ToHTMLParagraph(text string, inline Inline) string {
 	return html
 }
 
-func ContentToHTML(r HasContent, ctx context.Context, inline Inline) string {
+func ContentToHTML(r HasContent, ctx context.Context, inline Inline, options CallerOptions) string {
 	html := ""
 	var textBuf []string
 	flushParagraph := func() {
 		hasText := strings.Join(textBuf, "") != ""
 		if hasText {
-			html += ToHTMLParagraph(strings.Join(textBuf, "\n"), inline)
+			html += ToHTMLParagraph(strings.Join(textBuf, "\n"), inline, options)
 		}
 		textBuf = nil
 	}
@@ -62,7 +69,7 @@ func ContentToHTML(r HasContent, ctx context.Context, inline Inline) string {
 			textBuf = append(textBuf, t.Text)
 		} else {
 			flushParagraph()
-			html += n.ToHTML(ctx, inline)
+			html += n.ToHTML(ctx, inline, options)
 		}
 	}
 	flushParagraph()
@@ -100,14 +107,14 @@ func (r *RootNode) GetContent() []Node {
 	return r.Content
 }
 
-func (r *RootNode) ToHTML(ctx context.Context, inline Inline) string {
-	return ContentToHTML(r, ctx, inline)
+func (r *RootNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+	return ContentToHTML(r, ctx, inline, options)
 }
 
 type TextNode struct {
 	Text string
 }
 
-func (t *TextNode) ToHTML(ctx context.Context, inline Inline) string {
+func (t *TextNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
 	panic("TextNode does not support ToHTML")
 }

@@ -20,7 +20,7 @@ var TEMPLATE = htmltpl.Must(htmltpl.New("blockquote").Parse(`
 </blockquote>
 `))
 
-func (b *BlockquoteNode) ToHTML(ctx context.Context, inline Inline) string {
+func (b *BlockquoteNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
 	citeText := b.Cite
 	title := ""
 	uri := ""
@@ -51,7 +51,7 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, inline Inline) string {
 			uri = citeText
 		}
 	}
-	content := ContentToHTML(b, ctx, inline)
+	content := ContentToHTML(b, ctx, inline, options)
 
 	var sb strings.Builder
 	_ = TEMPLATE.Execute(&sb, map[string]interface{}{

@@ -3,57 +3,50 @@ package syntax
 import (
 	"context"
 	"regexp"
-	"strings"
 )
 
-// PreNode represents a <pre> block (with optional language class)
+// PreNode represents a <pre> block (stopp block with <pre> wrapper)
 type PreNode struct {
-	Lang    string // e.g. "perl", "python" (optional)
-	RawText string // raw preformatted text
+	Content []Node // StopPNodeのように子ノードを持つ
 }
 
-func (p *PreNode) ToHTML(ctx context.Context, inline Inline) string {
-	class := ""
-	if p.Lang != "" {
-		class = " class=\"code lang-" + p.Lang + "\""
-	}
-	return "<pre" + class + ">\n" + p.RawText + "\n</pre>"
+func (p *PreNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+	content := ContentToHTML(p, ctx, inline, CallerOptions{
+		stopp: true,
+	})
+	return "<pre>" + content + "</pre>"
 }
 
 func (p *PreNode) AddChild(n Node) {
-	panic("PreNode does not support adding child nodes")
+	p.Content = append(p.Content, n)
 }
 
 func (p *PreNode) GetContent() []Node {
-	return nil
+	return p.Content
 }
 
 type PreParser struct{}
 
-var rePreStart = regexp.MustCompile(`^>\|([^|]*)\|?$`)
-var rePreEnd = regexp.MustCompile(`^\|<$`)
+var rePreStart = regexp.MustCompile(`^>\|$`)
+var rePreEnd = regexp.MustCompile(`^(.*?)\|<$`)
 
 func (p *PreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	line := scanner.Peek()
-	m := rePreStart.FindStringSubmatch(line)
-	if m == nil {
-		return false
+	if rePreStart.MatchString(line) {
+		scanner.Next() // consume start
+		node := &PreNode{}
+		parent.AddChild(node)
+		*stack = append(*stack, node)
+		return true
 	}
-	scanner.Next() // consume start
-	lang := strings.TrimSpace(m[1])
-	var content []string
-	for !scanner.EOF() {
-		l := scanner.Peek()
-		if rePreEnd.MatchString(l) {
-			scanner.Next() // consume end
-			break
+	if m := rePreEnd.FindStringSubmatch(line); m != nil {
+		parent.AddChild(&TextNode{Text: m[1]})
+		scanner.Next() // consume end
+		if len(*stack) == 0 {
+			return false
 		}
-		content = append(content, scanner.Next())
+		*stack = (*stack)[:len(*stack)-1]
+		return true
 	}
-	node := &PreNode{Lang: lang, RawText: strings.Join(content, "\n")}
-	if add, ok := parent.(interface{ AddChild(Node) }); ok {
-		add.AddChild(node)
-	}
-	*stack = append(*stack, node)
-	return true
+	return false
 }

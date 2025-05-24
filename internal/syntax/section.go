@@ -67,14 +67,14 @@ func (p *SectionParser) Parse(scanner *LineScanner, parent HasContent, stack *[]
 	return true
 }
 
-func (s *SectionNode) ToHTML(ctx context.Context, inline Inline) string {
+func (s *SectionNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
 	tmpl := `
 <div class="section">
 <h{{.Level}}>{{.Title}}</h{{.Level}}>
 {{.Content}}
 </div>`
 	title := inline.Format(s.Title)
-	content := ContentToHTML(s, ctx, inline)
+	content := ContentToHTML(s, ctx, inline, options)
 	var sb strings.Builder
 	t := htmltpl.Must(htmltpl.New("section").Parse(tmpl))
 	_ = t.Execute(&sb, map[string]interface{}{

@@ -18,7 +18,7 @@ type DefinitionItemNode struct {
 	Descs []string // 複数のddを保持
 }
 
-func (d *DefinitionListNode) ToHTML(ctx context.Context, inline Inline) string {
+func (d *DefinitionListNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
 	html := "<dl>\n"
 	for _, item := range d.Items {
 		html += "  <dt>" + inline.Format(item.Term) + "</dt>\n"

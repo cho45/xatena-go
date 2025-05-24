@@ -11,7 +11,7 @@ type StopPNode struct {
 	Content string // raw content (HTML allowed)
 }
 
-func (s *StopPNode) ToHTML(ctx context.Context, inline Inline) string {
+func (s *StopPNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
 	return s.Content
 }
 func (s *StopPNode) AddChild(n Node) {

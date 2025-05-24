@@ -4,8 +4,6 @@ import (
 	"context"
 	"regexp"
 	"strings"
-
-	"github.com/cho45/xatena-go/internal/util"
 )
 
 // TableNode represents a table block
@@ -18,15 +16,15 @@ type TableCellNode struct {
 	Content  string
 }
 
-func (t *TableNode) ToHTML(ctx context.Context, inline Inline) string {
+func (t *TableNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
 	html := "<table>\n"
 	for _, row := range t.Rows {
 		html += "  <tr>\n"
 		for _, cell := range row {
 			if cell.IsHeader {
-				html += "    <th>" + util.EscapeHTML(cell.Content) + "</th>\n"
+				html += "    <th>" + inline.Format(cell.Content) + "</th>\n"
 			} else {
-				html += "    <td>" + util.EscapeHTML(cell.Content) + "</td>\n"
+				html += "    <td>" + inline.Format(cell.Content) + "</td>\n"
 			}
 		}
 		html += "  </tr>\n"

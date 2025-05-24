@@ -58,5 +58,5 @@ func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode
 // ToHTML: Xatenaインスタンスとcontext.Contextを渡す
 func (x *Xatena) ToHTML(ctx context.Context, input string) string {
 	node := x.parseXatena(ctx, input)
-	return node.ToHTML(ctx, x.Inline)
+	return node.ToHTML(ctx, x.Inline, syntax.CallerOptions{})
 }
