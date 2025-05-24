@@ -34,96 +34,114 @@ func NewInlineFormatter() *InlineFormatter {
 func (f *InlineFormatter) Format(s string) string {
 	s = strings.TrimPrefix(s, "\n")
 
-	// Perlのmatch順に正規表現を適用
-	// 1. [[]...[]] などの特殊なアンリンク
-	s = regexp.MustCompile(`\[\]([\s\S]*?)\[\]`).ReplaceAllStringFunc(s, func(m string) string {
-		return m[2 : len(m)-2]
-	})
-	s = regexp.MustCompile(`\(\(\(.*?\)\)\)`).ReplaceAllStringFunc(s, func(m string) string {
-		return m[1 : len(m)-1]
-	})
-	s = regexp.MustCompile(`\)\(\(.*?\)\)\(`).ReplaceAllStringFunc(s, func(m string) string {
-		return m[1 : len(m)-1]
-	})
-	// 2. footnote
-	s = regexp.MustCompile(`\(\((.+?)\)\)`).ReplaceAllStringFunc(s, func(m string) string {
-		note := m[2 : len(m)-2]
-		title := stripTags(note)
-		f.footnotes = append(f.footnotes, Footnote{Number: len(f.footnotes) + 1, Note: note, Title: title})
-		return fmt.Sprintf(`<a href="#fn%d" title="%s">*%d</a>`, len(f.footnotes), html.EscapeString(title), len(f.footnotes))
-	})
-	// 3. <a...>...</a> そのまま
-	s = regexp.MustCompile(`(?i)<a[^>]+>[\s\S]*?</a>`).ReplaceAllStringFunc(s, func(m string) string {
-		return m
-	})
-	// 4. <!-- ... -->
-	s = regexp.MustCompile(`<!--.*?-->`).ReplaceAllString(s, "<!-- -->")
-	// 5. <...> そのまま
-	s = regexp.MustCompile(`(?i)<[^>]+>`).ReplaceAllStringFunc(s, func(m string) string {
-		return m
-	})
-	// 6. [url:option] (barcode, title)
-	s = regexp.MustCompile(`\[((?:https?|ftp)://[^\s:]+(?:\:\d+)?[^\s:]+)(:(?:title(?:=([^\]]+))?|barcode))?\]`).ReplaceAllStringFunc(s, func(m string) string {
-		if !strings.HasPrefix(m, "[") || !strings.HasSuffix(m, "]") {
-			return m
-		}
-		re := regexp.MustCompile(`\[((?:https?|ftp)://[^\s:]+(?:\:\d+)?[^\s:]+)(:(?:title(?:=([^\]]+))?|barcode))?\]`)
-		m2 := re.FindStringSubmatch(m)
-		if m2 == nil {
-			return m
-		}
-		uri, opt, title := m2[1], m2[2], m2[3]
-		if opt == ":barcode" {
-			return fmt.Sprintf(`<img src="http://chart.apis.google.com/chart?chs=150x150&cht=qr&chl=%s" title="%s"/>`, url.QueryEscape(uri), html.EscapeString(uri))
-		}
-		if strings.HasPrefix(opt, ":title") {
-			if title == "" && f.aggressive {
-				// aggressive title fetch (未実装)
+	// 個別の記法ごとの正規表現とハンドラ
+	type inlineRule struct {
+		pattern *regexp.Regexp
+		handler func([]string) string
+	}
+
+	rules := []inlineRule{
+		{
+			regexp.MustCompile(`\[\]([\s\S]*?)\[\]`),
+			func(m []string) string { return m[1] }, // [[]...[]] アンリンク
+		},
+		{
+			regexp.MustCompile(`\(\(\(.*?\)\)\)`),
+			func(m []string) string { return m[0][1 : len(m[0])-1] }, // (((...)))
+		},
+		{
+			regexp.MustCompile(`\)\(\(.*?\)\)\(`),
+			func(m []string) string { return m[0][1 : len(m[0])-1] }, // )((...))(
+		},
+		{
+			regexp.MustCompile(`\(\((.+?)\)\)`),
+			func(m []string) string { // footnote
+				note := m[1]
+				title := stripTags(note)
+				f.footnotes = append(f.footnotes, Footnote{Number: len(f.footnotes) + 1, Note: note, Title: title})
+				return fmt.Sprintf(`<a href="#fn%d" title="%s">*%d</a>`, len(f.footnotes), html.EscapeString(title), len(f.footnotes))
+			},
+		},
+		{
+			regexp.MustCompile(`(?i)<a[^>]+>[\s\S]*?</a>`),
+			func(m []string) string { return m[0] }, // <a...>...</a>
+		},
+		{
+			regexp.MustCompile(`<!--.*?-->`),
+			func(m []string) string { return "<!-- -->" }, // コメント
+		},
+		{
+			regexp.MustCompile(`(?i)<[^>]+>`),
+			func(m []string) string { return m[0] }, // その他タグ
+		},
+		{
+			regexp.MustCompile(`\[((?:https?|ftp)://[^\s:]+(?:\:\d+)?[^\s:]+)(:(?:title(?:=([^\]]+))?|barcode))?\]`),
+			func(m []string) string { // [url:option]
+				uri, opt, title := m[1], m[2], m[3]
+				if opt == ":barcode" {
+					return fmt.Sprintf(`<img src="http://chart.apis.google.com/chart?chs=150x150&cht=qr&chl=%s" title="%s"/>`, url.QueryEscape(uri), html.EscapeString(uri))
+				}
+				if strings.HasPrefix(opt, ":title") {
+					return fmt.Sprintf(`<a href="%s">%s</a>`, uri, html.EscapeString(title))
+				}
+				return fmt.Sprintf(`<a href="%s">%s</a>`, uri, uri)
+			},
+		},
+		{
+			regexp.MustCompile(`\[((?:https?|ftp):[^\s<>\]]+)\]`),
+			func(m []string) string { // [url]
+				uri := m[1]
+				if strings.HasSuffix(uri, ":barcode") || strings.HasPrefix(uri, ":title") {
+					return m[0]
+				}
+				return fmt.Sprintf(`<a href="%s">%s</a>`, uri, uri)
+			},
+		},
+		{
+			regexp.MustCompile(`\[mailto:([^\s\@:?]+\@[^
+\s\@:?]+(\?[^\s]+)?)\]`),
+			func(m []string) string { // mailto
+				uri := m[1]
+				return fmt.Sprintf(`<a href="mailto:%s">%s</a>`, uri, uri)
+			},
+		},
+		{
+			regexp.MustCompile(`\[tex:([^\]]+)\]`),
+			func(m []string) string { // tex
+				tex := m[1]
+				return fmt.Sprintf(`<img src="http://chart.apis.google.com/chart?cht=tx&chl=%s" alt="%s"/>`, url.QueryEscape(tex), html.EscapeString(tex))
+			},
+		},
+		// 裸URL検出用パターンを追加
+		{
+			regexp.MustCompile(`((?:https?|ftp):[^\s<>"]+)`),
+			func(m []string) string {
+				uri := m[1]
+				if strings.HasSuffix(uri, ":barcode") || strings.HasPrefix(uri, ":title") {
+					return m[0]
+				}
+				return fmt.Sprintf(`<a href="%s">%s</a>`, uri, uri)
+			},
+		},
+	}
+
+	// すべてのパターンを | で結合した大きな正規表現を作成
+	var patterns []string
+	for _, r := range rules {
+		patterns = append(patterns, r.pattern.String())
+	}
+	bigRe := regexp.MustCompile(strings.Join(patterns, "|"))
+
+	// 1パスで置換
+	result := bigRe.ReplaceAllStringFunc(s, func(m string) string {
+		for _, r := range rules {
+			if sub := r.pattern.FindStringSubmatch(m); sub != nil {
+				return r.handler(sub)
 			}
-			return fmt.Sprintf(`<a href="%s">%s</a>`, uri, html.EscapeString(title))
 		}
-		return fmt.Sprintf(`<a href="%s">%s</a>`, uri, uri)
+		return m
 	})
-	// 7. [url] (通常リンク)
-	s = regexp.MustCompile(`\[((?:https?|ftp):[^\s<>\]]+)\]`).ReplaceAllStringFunc(s, func(m string) string {
-		if !strings.HasPrefix(m, "[") || !strings.HasSuffix(m, "]") {
-			return m
-		}
-		re := regexp.MustCompile(`\[((?:https?|ftp):[^\s<>\]]+)\]`)
-		m2 := re.FindStringSubmatch(m)
-		if m2 == nil {
-			return m
-		}
-		uri := m2[1]
-		if strings.HasSuffix(uri, ":barcode") || strings.HasPrefix(uri, ":title") {
-			return m
-		}
-		return fmt.Sprintf(`<a href="%s">%s</a>`, uri, uri)
-	})
-	// 8. mailto
-	s = regexp.MustCompile(`\[mailto:([^\s\@:?]+\@[^\s\@:?]+(\?[^\s]+)?)\]`).ReplaceAllStringFunc(s, func(m string) string {
-		if !strings.HasPrefix(m, "[") || !strings.HasSuffix(m, "]") {
-			return m
-		}
-		re := regexp.MustCompile(`\[mailto:([^\s\@:?]+\@[^\s\@:?]+(\?[^\s]+)?)\]`)
-		m2 := re.FindStringSubmatch(m)
-		if m2 == nil {
-			return m
-		}
-		uri := m2[1]
-		return fmt.Sprintf(`<a href="mailto:%s">%s</a>`, uri, uri)
-	})
-	// 9. tex
-	s = regexp.MustCompile(`\[tex:([^\]]+)\]`).ReplaceAllStringFunc(s, func(m string) string {
-		re := regexp.MustCompile(`\[tex:([^\]]+)\]`)
-		m2 := re.FindStringSubmatch(m)
-		if m2 == nil {
-			return m
-		}
-		tex := m2[1]
-		return fmt.Sprintf(`<img src="http://chart.apis.google.com/chart?cht=tx&chl=%s" alt="%s"/>`, url.QueryEscape(tex), html.EscapeString(tex))
-	})
-	return s
+	return result
 }
 
 func stripTags(s string) string {

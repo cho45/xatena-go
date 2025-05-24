@@ -16,6 +16,11 @@ func TestInlineFormatter_Format(t *testing.T) {
 			expect: `<a href="http://example.com/">http://example.com/</a>`,
 		},
 		{
+			name:   "simple link raw",
+			input:  "http://example.com/",
+			expect: `<a href="http://example.com/">http://example.com/</a>`,
+		},
+		{
 			name:   "mailto",
 			input:  "[mailto:foo@example.com]",
 			expect: `<a href="mailto:foo@example.com">foo@example.com</a>`,
