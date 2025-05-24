@@ -10,8 +10,12 @@ type CallerOptions struct {
 	stopp bool
 }
 
+type XatenaContext interface {
+	GetInline() Inline
+}
+
 type Node interface {
-	ToHTML(ctx context.Context, inline Inline, options CallerOptions) string
+	ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string
 }
 
 type HasContent interface {
@@ -34,8 +38,8 @@ func SplitForBreak(text string) []string {
 	return parts
 }
 
-func ToHTMLParagraph(ctx context.Context, text string, inline Inline, options CallerOptions) string {
-	text = inline.Format(ctx, text)
+func ToHTMLParagraph(ctx context.Context, text string, xatena XatenaContext, options CallerOptions) string {
+	text = xatena.GetInline().Format(ctx, text)
 	if options.stopp {
 		return text
 	}
@@ -54,13 +58,13 @@ func ToHTMLParagraph(ctx context.Context, text string, inline Inline, options Ca
 	return html
 }
 
-func ContentToHTML(r HasContent, ctx context.Context, inline Inline, options CallerOptions) string {
+func ContentToHTML(r HasContent, ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	html := ""
 	var textBuf []string
 	flushParagraph := func() {
 		hasText := strings.Join(textBuf, "") != ""
 		if hasText {
-			html += ToHTMLParagraph(ctx, strings.Join(textBuf, "\n"), inline, options)
+			html += ToHTMLParagraph(ctx, strings.Join(textBuf, "\n"), xatena, options)
 		}
 		textBuf = nil
 	}
@@ -69,7 +73,7 @@ func ContentToHTML(r HasContent, ctx context.Context, inline Inline, options Cal
 			textBuf = append(textBuf, t.Text)
 		} else {
 			flushParagraph()
-			html += n.ToHTML(ctx, inline, options)
+			html += n.ToHTML(ctx, xatena, options)
 		}
 	}
 	flushParagraph()
@@ -107,14 +111,14 @@ func (r *RootNode) GetContent() []Node {
 	return r.Content
 }
 
-func (r *RootNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	return ContentToHTML(r, ctx, inline, options)
+func (r *RootNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
+	return ContentToHTML(r, ctx, xatena, options)
 }
 
 type TextNode struct {
 	Text string
 }
 
-func (t *TextNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+func (t *TextNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	panic("TextNode does not support ToHTML")
 }

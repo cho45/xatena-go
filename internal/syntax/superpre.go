@@ -14,7 +14,7 @@ type SuperPreNode struct {
 	RawText string // raw preformatted text (will be HTML-escaped)
 }
 
-func (s *SuperPreNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+func (s *SuperPreNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	className := "code"
 	langClass := ""
 	if s.Lang != "" {

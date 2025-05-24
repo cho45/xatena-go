@@ -64,5 +64,13 @@ func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode
 // ToHTML: Xatenaインスタンスとcontext.Contextを渡す
 func (x *Xatena) ToHTML(ctx context.Context, input string) string {
 	node := x.parseXatena(ctx, input)
-	return node.ToHTML(ctx, x.Inline, syntax.CallerOptions{})
+	return node.ToHTML(ctx, x, syntax.CallerOptions{})
+}
+
+func (x *Xatena) GetInline() syntax.Inline {
+	return x.Inline
+}
+
+func (x *Xatena) GetBlockquoteTemplate() interface{} {
+	return nil // 必要に応じてカスタマイズ
 }

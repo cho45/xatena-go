@@ -7,7 +7,7 @@ import (
 
 type CommentNode struct{}
 
-func (c *CommentNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+func (c *CommentNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	return "<!-- -->"
 }
 func (c *CommentNode) AddChild(n Node)    {}

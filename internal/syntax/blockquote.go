@@ -20,7 +20,7 @@ var TEMPLATE = htmltpl.Must(htmltpl.New("blockquote").Parse(`
 </blockquote>
 `))
 
-func (b *BlockquoteNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+func (b *BlockquoteNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	citeText := b.Cite
 	title := ""
 	uri := ""
@@ -38,10 +38,10 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, inline Inline, options Call
 				title = `<a href="` + uri + `">Example Web Page</a>`
 			} else {
 				uri = citeText
-				title = inline.Format(ctx, "["+citeText+"]")
+				title = xatena.GetInline().Format(ctx, "["+citeText+"]")
 			}
 		} else {
-			title = inline.Format(ctx, citeText)
+			title = xatena.GetInline().Format(ctx, citeText)
 		}
 		// Extract URL from title (e.g. <a href="..."></a>)
 		re := regexp.MustCompile(`href="([^"]+)"`)
@@ -51,7 +51,7 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, inline Inline, options Call
 			uri = citeText
 		}
 	}
-	content := ContentToHTML(b, ctx, inline, options)
+	content := ContentToHTML(b, ctx, xatena, options)
 
 	var sb strings.Builder
 	_ = TEMPLATE.Execute(&sb, map[string]interface{}{

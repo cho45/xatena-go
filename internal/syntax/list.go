@@ -19,8 +19,9 @@ type ListItemNode struct {
 	Content []interface{} // string or *ListStructNode
 }
 
-func (l *ListNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+func (l *ListNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	html := ""
+	inline := xatena.GetInline()
 	for _, list := range l.Items {
 		html += listToHTML(list, ctx, inline)
 	}

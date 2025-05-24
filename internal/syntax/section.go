@@ -64,14 +64,15 @@ func (p *SectionParser) Parse(scanner *LineScanner, parent HasContent, stack *[]
 	return true
 }
 
-func (s *SectionNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+func (s *SectionNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	tmpl := `
 <div class="section">
 <h{{.Level}}>{{.Title}}</h{{.Level}}>
 {{.Content}}
 </div>`
+	inline := xatena.GetInline()
 	title := inline.Format(ctx, s.Title)
-	content := ContentToHTML(s, ctx, inline, options)
+	content := ContentToHTML(s, ctx, xatena, options)
 	var sb strings.Builder
 	t := htmltpl.Must(htmltpl.New("section").Parse(tmpl))
 	_ = t.Execute(&sb, map[string]interface{}{

@@ -28,13 +28,14 @@ var TableTemplate = htmltpl.Must(htmltpl.New("table").Parse(`
 {{- end}}
 </table>`))
 
-func (t *TableNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+func (t *TableNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	type cell struct {
 		IsHeader bool
 		Content  htmltpl.HTML
 	}
 	type row []cell
 	var rows []row
+	inline := xatena.GetInline()
 	for _, r := range t.Rows {
 		var rowCells row
 		for _, c := range r {

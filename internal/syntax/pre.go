@@ -10,8 +10,8 @@ type PreNode struct {
 	Content []Node // StopPNodeのように子ノードを持つ
 }
 
-func (p *PreNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	content := ContentToHTML(p, ctx, inline, CallerOptions{
+func (p *PreNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
+	content := ContentToHTML(p, ctx, xatena, CallerOptions{
 		stopp: true,
 	})
 	return "<pre>" + content + "</pre>"

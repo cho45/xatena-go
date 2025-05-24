@@ -12,8 +12,8 @@ type SeeMoreNode struct {
 	Content []Node
 }
 
-func (s *SeeMoreNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	content := ContentToHTML(s, ctx, inline, options)
+func (s *SeeMoreNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
+	content := ContentToHTML(s, ctx, xatena, options)
 	return `<div class="seemore">` + content + `</div>`
 }
 

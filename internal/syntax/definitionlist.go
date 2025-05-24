@@ -30,12 +30,13 @@ var DefinitionListTemplate = htmltpl.Must(htmltpl.New("definitionlist").Parse(`
 {{- end}}
 </dl>`))
 
-func (d *DefinitionListNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
+func (d *DefinitionListNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	type item struct {
 		Term  htmltpl.HTML
 		Descs []htmltpl.HTML
 	}
 	var items []item
+	inline := xatena.GetInline()
 	for _, it := range d.Items {
 		var descs []htmltpl.HTML
 		for _, desc := range it.Descs {

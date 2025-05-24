@@ -10,8 +10,8 @@ type StopPNode struct {
 	Content []Node
 }
 
-func (s *StopPNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	return ContentToHTML(s, ctx, inline, CallerOptions{
+func (s *StopPNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
+	return ContentToHTML(s, ctx, xatena, CallerOptions{
 		stopp: true,
 	})
 }
