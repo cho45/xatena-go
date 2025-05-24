@@ -31,7 +31,7 @@ func (x *Xatena) GetBlockParsers() []syntax.BlockParser {
 		&syntax.DefinitionListParser{},
 		&syntax.TableParser{},
 		&syntax.SectionParser{},
-		// &syntax.CommentParser{},
+		&syntax.CommentParser{},
 	}
 }
 
