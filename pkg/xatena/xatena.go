@@ -13,10 +13,14 @@ type Xatena struct {
 	Inline syntax.Inline
 }
 
-func NewXatena() *Xatena {
+func NewXatenaWithInline(inline syntax.Inline) *Xatena {
 	return &Xatena{
-		Inline: syntax.NewInlineFormatter(),
+		Inline: inline,
 	}
+}
+
+func NewXatena() *Xatena {
+	return NewXatenaWithInline(syntax.NewInlineFormatter())
 }
 
 // GetBlockParsers: Xatenaインスタンスを受け取る形に変更

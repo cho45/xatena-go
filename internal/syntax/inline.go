@@ -12,10 +12,14 @@ type Inline interface {
 	Format(s string) string
 }
 
+type InlineRule struct {
+	Pattern *regexp.Regexp
+	Handler func(f *InlineFormatter, m []string) string
+}
+
 type InlineFormatter struct {
-	footnotes  []Footnote
-	aggressive bool              // aggressive title fetch (未実装)
-	cache      map[string]string // dummy cache for title (未実装)
+	footnotes []Footnote
+	rules     []InlineRule
 }
 
 type Footnote struct {
@@ -24,38 +28,44 @@ type Footnote struct {
 	Title  string
 }
 
-func NewInlineFormatter() *InlineFormatter {
-	return &InlineFormatter{
-		footnotes: []Footnote{},
-		cache:     map[string]string{},
-	}
+func (f *InlineFormatter) AddRule(rule InlineRule) {
+	f.rules = append(f.rules, rule)
 }
 
-func (f *InlineFormatter) Format(s string) string {
-	s = strings.TrimPrefix(s, "\n")
-
-	// 個別の記法ごとの正規表現とハンドラ
-	type inlineRule struct {
-		pattern *regexp.Regexp
-		handler func([]string) string
+func (f *InlineFormatter) AddRuleAt(index int, rule InlineRule) {
+	if index < 0 || index > len(f.rules) {
+		index = len(f.rules)
 	}
+	f.rules = append(f.rules[:index], append([]InlineRule{rule}, f.rules[index:]...)...)
+}
 
-	rules := []inlineRule{
+func NewInlineFormatter() *InlineFormatter {
+	f := &InlineFormatter{
+		footnotes: []Footnote{},
+	}
+	// デフォルトルールを登録
+	f.rules = defaultInlineRules()
+	return f
+}
+
+// デフォルトルール群を返す
+func defaultInlineRules() []InlineRule {
+	return []InlineRule{
 		{
-			regexp.MustCompile(`\[\]([\s\S]*?)\[\]`),
-			func(m []string) string { return m[1] }, // [[]...[]] アンリンク
+			Pattern: regexp.MustCompile(`\[\]([\s\S]*?)\[\]`),
+			Handler: func(f *InlineFormatter, m []string) string { return m[1] }, // [[]...[]] アンリンク
 		},
 		{
-			regexp.MustCompile(`\(\(\(.*?\)\)\)`),
-			func(m []string) string { return m[0][1 : len(m[0])-1] }, // (((...)))
+			Pattern: regexp.MustCompile(`\(\(\(.*?\)\)\)`),
+			Handler: func(f *InlineFormatter, m []string) string { return m[0][1 : len(m[0])-1] }, // (((...)))
 		},
 		{
-			regexp.MustCompile(`\)\(\(.*?\)\)\(`),
-			func(m []string) string { return m[0][1 : len(m[0])-1] }, // )((...))(
+			Pattern: regexp.MustCompile(`\)\(\(.*?\)\)\(`),
+			Handler: func(f *InlineFormatter, m []string) string { return m[0][1 : len(m[0])-1] }, // )((...))(
 		},
 		{
-			regexp.MustCompile(`\(\((.+?)\)\)`),
-			func(m []string) string { // footnote
+			Pattern: regexp.MustCompile(`\(\((.+?)\)\)`),
+			Handler: func(f *InlineFormatter, m []string) string { // footnote
 				note := m[1]
 				title := stripTags(note)
 				f.footnotes = append(f.footnotes, Footnote{Number: len(f.footnotes) + 1, Note: note, Title: title})
@@ -63,20 +73,20 @@ func (f *InlineFormatter) Format(s string) string {
 			},
 		},
 		{
-			regexp.MustCompile(`(?i)<a[^>]+>[\s\S]*?</a>`),
-			func(m []string) string { return m[0] }, // <a...>...</a>
+			Pattern: regexp.MustCompile(`(?i)<a[^>]+>[\s\S]*?</a>`),
+			Handler: func(f *InlineFormatter, m []string) string { return m[0] }, // <a...>...</a>
 		},
 		{
-			regexp.MustCompile(`<!--.*?-->`),
-			func(m []string) string { return "<!-- -->" }, // コメント
+			Pattern: regexp.MustCompile(`<!--.*?-->`),
+			Handler: func(f *InlineFormatter, m []string) string { return "<!-- -->" }, // コメント
 		},
 		{
-			regexp.MustCompile(`(?i)<[^>]+>`),
-			func(m []string) string { return m[0] }, // その他タグ
+			Pattern: regexp.MustCompile(`(?i)<[^>]+>`),
+			Handler: func(f *InlineFormatter, m []string) string { return m[0] }, // その他タグ
 		},
 		{
-			regexp.MustCompile(`\[((?:https?|ftp)://[^\s:]+(?:\:\d+)?[^\s:]+)(:(?:title(?:=([^\]]+))?|barcode))?\]`),
-			func(m []string) string { // [url:option]
+			Pattern: regexp.MustCompile(`\[((?:https?|ftp)://[^\s:]+(?:\:\d+)?[^\s:]+)(:(?:title(?:=([^\]]+))?|barcode))?\]`),
+			Handler: func(f *InlineFormatter, m []string) string { // [url:option]
 				uri, opt, title := m[1], m[2], m[3]
 				if opt == ":barcode" {
 					return fmt.Sprintf(`<img src="http://chart.apis.google.com/chart?chs=150x150&cht=qr&chl=%s" title="%s"/>`, url.QueryEscape(uri), html.EscapeString(uri))
@@ -88,8 +98,8 @@ func (f *InlineFormatter) Format(s string) string {
 			},
 		},
 		{
-			regexp.MustCompile(`\[((?:https?|ftp):[^\s<>\]]+)\]`),
-			func(m []string) string { // [url]
+			Pattern: regexp.MustCompile(`\[((?:https?|ftp):[^\s<>\]]+)\]`),
+			Handler: func(f *InlineFormatter, m []string) string { // [url]
 				uri := m[1]
 				if strings.HasSuffix(uri, ":barcode") || strings.HasPrefix(uri, ":title") {
 					return m[0]
@@ -98,24 +108,24 @@ func (f *InlineFormatter) Format(s string) string {
 			},
 		},
 		{
-			regexp.MustCompile(`\[mailto:([^\s\@:?]+\@[^
+			Pattern: regexp.MustCompile(`\[mailto:([^\s\@:?]+\@[^
 \s\@:?]+(\?[^\s]+)?)\]`),
-			func(m []string) string { // mailto
+			Handler: func(f *InlineFormatter, m []string) string { // mailto
 				uri := m[1]
 				return fmt.Sprintf(`<a href="mailto:%s">%s</a>`, uri, uri)
 			},
 		},
 		{
-			regexp.MustCompile(`\[tex:([^\]]+)\]`),
-			func(m []string) string { // tex
+			Pattern: regexp.MustCompile(`\[tex:([^\]]+)\]`),
+			Handler: func(f *InlineFormatter, m []string) string { // tex
 				tex := m[1]
 				return fmt.Sprintf(`<img src="http://chart.apis.google.com/chart?cht=tx&chl=%s" alt="%s"/>`, url.QueryEscape(tex), html.EscapeString(tex))
 			},
 		},
 		// 裸URL検出用パターンを追加
 		{
-			regexp.MustCompile(`((?:https?|ftp):[^\s<>"]+)`),
-			func(m []string) string {
+			Pattern: regexp.MustCompile(`((?:https?|ftp):[^\s<>\"]+)`),
+			Handler: func(f *InlineFormatter, m []string) string {
 				uri := m[1]
 				if strings.HasSuffix(uri, ":barcode") || strings.HasPrefix(uri, ":title") {
 					return m[0]
@@ -124,19 +134,24 @@ func (f *InlineFormatter) Format(s string) string {
 			},
 		},
 	}
+}
 
+func (f *InlineFormatter) Format(s string) string {
+	s = strings.TrimPrefix(s, "\n")
+	if len(f.rules) == 0 {
+		f.rules = defaultInlineRules()
+	}
 	// すべてのパターンを | で結合した大きな正規表現を作成
 	var patterns []string
-	for _, r := range rules {
-		patterns = append(patterns, r.pattern.String())
+	for _, r := range f.rules {
+		patterns = append(patterns, r.Pattern.String())
 	}
 	bigRe := regexp.MustCompile(strings.Join(patterns, "|"))
-
 	// 1パスで置換
 	result := bigRe.ReplaceAllStringFunc(s, func(m string) string {
-		for _, r := range rules {
-			if sub := r.pattern.FindStringSubmatch(m); sub != nil {
-				return r.handler(sub)
+		for _, r := range f.rules {
+			if sub := r.Pattern.FindStringSubmatch(m); sub != nil {
+				return r.Handler(f, sub)
 			}
 		}
 		return m
