@@ -3,49 +3,47 @@ package syntax
 import (
 	"context"
 	"regexp"
-	"strings"
 )
 
 // StopPNode represents a block that disables auto <p>/<br> insertion.
 type StopPNode struct {
-	Content string // raw content (HTML allowed)
+	children []Node
 }
 
 func (s *StopPNode) ToHTML(ctx context.Context, inline Inline, options CallerOptions) string {
-	return s.Content
+	return ContentToHTML(s, ctx, inline, CallerOptions{
+		stopp: true,
+	})
 }
 func (s *StopPNode) AddChild(n Node) {
-	panic("StopPNode does not support child nodes")
+	s.children = append(s.children, n)
 }
 
 func (s *StopPNode) GetContent() []Node {
-	return nil
+	return s.children
 }
 
 type StopPParser struct{}
 
-var reStopPStart = regexp.MustCompile(`^>\s*$`)
-var reStopPEnd = regexp.MustCompile(`^<\s*$`)
+var reStopPStart = regexp.MustCompile(`^>(<.+>)(<)?$`)
+var reStopPEnd = regexp.MustCompile(`^(.+>)<`)
 
 func (p *StopPParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
-	line := scanner.Peek()
-	if !reStopPStart.MatchString(line) {
-		return false
-	}
-	scanner.Next() // consume start
-	var content []string
-	for !scanner.EOF() {
-		l := scanner.Peek()
-		if reStopPEnd.MatchString(l) {
-			scanner.Next() // consume end
-			break
+	if scanner.Scan(reStopPStart) {
+		node := &StopPNode{}
+		node.AddChild(&TextNode{Text: scanner.Matched()[1]}) // Add the opening tag
+		parent.AddChild(node)
+		if scanner.Matched()[2] == "" {
+			*stack = append(*stack, node)
 		}
-		content = append(content, scanner.Next())
+		return true
 	}
-	node := &StopPNode{Content: strings.Join(content, "\n")}
-	if add, ok := parent.(interface{ AddChild(Node) }); ok {
-		add.AddChild(node)
+
+	if scanner.Scan(reStopPEnd) {
+		lastParent := (*stack)[len(*stack)-1]
+		*stack = (*stack)[:len(*stack)-1]
+		lastParent.AddChild(&TextNode{Text: scanner.Matched()[1]})
+		return true
 	}
-	*stack = append(*stack, node)
-	return true
+	return false
 }
