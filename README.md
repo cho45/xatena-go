@@ -46,6 +46,40 @@ func main() {
 }
 ```
 
+インライン記法を追加する方法
+
+```go
+func getTitle(ctx context.Context, uri string) string {
+    req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
+    return ...
+}
+
+func main() {
+    // タイトルハンドラ
+    formatter := xatena.NewInlineFormatter(func(f *xatena.InlineFormatter) {
+        f.SetTitleHandler(getTitle)
+    })
+
+    formatter.AddRule(InlineRule{
+        Pattern: regexp.MustCompile(`\[custom:(.+?)\]`),
+        Handler: func(ctx context.Context, f *InlineFormatter, m []string) string {
+            return "<span>" + html.EscapeString(m[1]) + "</span>"
+        },
+    })
+
+    x := xatena.NewXatenaWithInline(formatter)
+    output := x.ToHTML(context.Background(), string(input))
+}
+```
+
+はてな記法に挙動を近づける。(自動 p / br 挿入のルールが変化します)
+
+```go
+x := NewXatenaWithFields(NewInlineFormatter(), true)
+...
+```
+
+
 ## テスト
 
 ```sh
