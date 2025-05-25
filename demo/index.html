@@ -1,0 +1,84 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <script src="wasm_exec.js" defer></script>
+        <script src="script.js" defer></script>
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                font-family: sans-serif;
+                background: #f8f8f8;
+            }
+            .container {
+                display: flex;
+                height: 100vh;
+            }
+            .pane {
+                flex: 1 1 0;
+                box-sizing: border-box;
+                padding: 16px;
+                background: #fff;
+                border: 1px solid #ccc;
+                margin: 16px 8px;
+                min-width: 0;
+                overflow: auto;
+            }
+            #src {
+                width: 100%;
+                height: 90vh;
+                box-sizing: border-box;
+                font-size: 1em;
+                font-family: "Menlo", "Monaco", "Consolas", monospace;
+                border: 1px solid #aaa;
+                border-radius: 4px;
+                resize: none;
+                background: #f9f9f9;
+            }
+            #result {
+                width: auto;
+                min-height: 90vh;
+                background: #fafbfc;
+                border: 1px solid #aaa;
+                border-radius: 4px;
+                padding: 8px;
+                font-size: 1em;
+                overflow: visible;
+                box-sizing: border-box;
+            }
+            @media (max-width: 800px) {
+                .container {
+                    flex-direction: column;
+                }
+                .pane {
+                    margin: 8px 16px;
+                    height: 40vh;
+                }
+                #src, #result {
+                    min-height: 30vh;
+                    height: 30vh;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="pane">
+                <label for="src"><b>入力エリア</b></label><br />
+                <textarea id="src" rows="10" cols="60">* test
+test http://example.com/ test
+
+
+>|javascript|
+console.log("Hello, World!");
+||<
+</textarea>
+            </div>
+            <div class="pane">
+                <b>出力エリア</b>
+                <div id="result"></div>
+            </div>
+        </div>
+    </body>
+</html>
