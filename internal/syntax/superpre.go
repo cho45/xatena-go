@@ -3,10 +3,9 @@ package syntax
 import (
 	"context"
 	htmltpl "html/template"
+	"html"
 	"regexp"
 	"strings"
-
-	"github.com/cho45/xatena-go/internal/util"
 )
 
 var SuperPreTemplate = htmltpl.Must(htmltpl.New("superpre").Parse(`
@@ -27,7 +26,7 @@ func (s *SuperPreNode) ToHTML(ctx context.Context, xatena XatenaContext, options
 	}
 	params := map[string]interface{}{
 		"Class":   className + langClass,
-		"RawText": htmltpl.HTML(util.EscapeHTML(s.RawText)),
+		"RawText": htmltpl.HTML(html.EscapeString(s.RawText)),
 	}
 	html := xatena.ExecuteTemplate("superpre", params)
 	return html
