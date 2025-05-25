@@ -9,7 +9,7 @@ import (
 
 var TableTemplate = htmltpl.Must(htmltpl.New("table").Parse(`
 <table>
-{{- range .}}
+{{- range .Rows}}
   <tr>
   {{- range .}}
     {{if .IsHeader}}<th>{{.Content}}</th>{{else}}<td>{{.Content}}</td>{{end}}
@@ -46,9 +46,11 @@ func (t *TableNode) ToHTML(ctx context.Context, xatena XatenaContext, options Ca
 		}
 		rows = append(rows, rowCells)
 	}
-	var sb strings.Builder
-	TableTemplate.Execute(&sb, rows)
-	return sb.String()
+	params := map[string]interface{}{
+		"Rows": rows,
+	}
+	html := xatena.ExecuteTemplate("table", params)
+	return html
 }
 
 func (t *TableNode) AddChild(n Node) {
