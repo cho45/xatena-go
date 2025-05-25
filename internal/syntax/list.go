@@ -51,14 +51,11 @@ func listStructToHTML(list *ListStructNode, ctx context.Context, xatena XatenaCo
 		}
 		items = append(items, map[string]interface{}{"Content": content})
 	}
-	html, err := xatena.ExecuteTemplate("list", map[string]interface{}{
+	html := xatena.ExecuteTemplate("list", map[string]interface{}{
 		"OpenTag":  htmltpl.HTML("<" + list.Name + ">"),
 		"CloseTag": htmltpl.HTML("</" + list.Name + ">"),
 		"Items":    items,
 	})
-	if err != nil {
-		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
-	}
 	return html
 }
 

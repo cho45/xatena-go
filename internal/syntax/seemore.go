@@ -20,10 +20,7 @@ type SeeMoreNode struct {
 func (s *SeeMoreNode) ToHTML(ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	content := ContentToHTML(s, ctx, xatena, options)
 	params := map[string]interface{}{"Content": htmltpl.HTML(content)}
-	html, err := xatena.ExecuteTemplate("seemore", params)
-	if err != nil {
-		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
-	}
+	html := xatena.ExecuteTemplate("seemore", params)
 	return html
 }
 

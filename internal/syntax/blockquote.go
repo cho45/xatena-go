@@ -50,14 +50,11 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, xatena XatenaContext, optio
 	}
 	content := ContentToHTML(b, ctx, xatena, options)
 
-	html, err := xatena.ExecuteTemplate("blockquote", map[string]interface{}{
+	html := xatena.ExecuteTemplate("blockquote", map[string]interface{}{
 		"Cite":    uri,
 		"Title":   htmltpl.HTML(title),
 		"Content": htmltpl.HTML(content),
 	})
-	if err != nil {
-		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
-	}
 	return html
 }
 

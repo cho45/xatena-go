@@ -80,9 +80,6 @@ func (s *SectionNode) ToHTML(ctx context.Context, xatena XatenaContext, options 
 		"Title":   htmltpl.HTML(title),
 		"Content": htmltpl.HTML(content),
 	}
-	html, err := xatena.ExecuteTemplate("section", params)
-	if err != nil {
-		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
-	}
+	html := xatena.ExecuteTemplate("section", params)
 	return html
 }

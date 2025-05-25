@@ -20,10 +20,7 @@ func (s *StopPNode) ToHTML(ctx context.Context, xatena XatenaContext, options Ca
 		stopp: true,
 	})
 	params := map[string]interface{}{"Content": htmltpl.HTML(content)}
-	html, err := xatena.ExecuteTemplate("stopp", params)
-	if err != nil {
-		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
-	}
+	html := xatena.ExecuteTemplate("stopp", params)
 	return html
 }
 func (s *StopPNode) AddChild(n Node) {

@@ -20,10 +20,7 @@ func (p *PreNode) ToHTML(ctx context.Context, xatena XatenaContext, options Call
 		stopp: true,
 	})
 	params := map[string]interface{}{"Content": htmltpl.HTML(content)}
-	html, err := xatena.ExecuteTemplate("pre", params)
-	if err != nil {
-		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
-	}
+	html := xatena.ExecuteTemplate("pre", params)
 	return html
 }
 

@@ -86,25 +86,17 @@ func (x *Xatena) GetInline() syntax.Inline {
 	return x.Inline
 }
 
-func (x *Xatena) ExecuteTemplate(name string, params map[string]interface{}) (string, error) {
+func (x *Xatena) ExecuteTemplate(name string, params map[string]interface{}) string {
 	tmpl, ok := x.Templates[name]
 	if !ok {
-		return "", &TemplateNotFoundError{name}
+		return `<div class="xatena-template-error">template not found: ` + htmltpl.HTMLEscapeString(name) + `</div>`
 	}
 	var sb strings.Builder
 	err := tmpl.Execute(&sb, params)
 	if err != nil {
-		return "", err
+		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
 	}
-	return sb.String(), nil
-}
-
-type TemplateNotFoundError struct {
-	Name string
-}
-
-func (e *TemplateNotFoundError) Error() string {
-	return "template not found: " + e.Name
+	return sb.String()
 }
 
 func (x *Xatena) GetBlockquoteTemplate() interface{} {

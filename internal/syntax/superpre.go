@@ -5,7 +5,6 @@ import (
 	htmltpl "html/template"
 	"regexp"
 	"strings"
-	"text/template"
 
 	"github.com/cho45/xatena-go/internal/util"
 )
@@ -30,10 +29,7 @@ func (s *SuperPreNode) ToHTML(ctx context.Context, xatena XatenaContext, options
 		"Class":   className + langClass,
 		"RawText": htmltpl.HTML(util.EscapeHTML(s.RawText)),
 	}
-	html, err := xatena.ExecuteTemplate("superpre", params)
-	if err != nil {
-		return `<div class="xatena-template-error">template error: ` + template.HTMLEscapeString(err.Error()) + `</div>`
-	}
+	html := xatena.ExecuteTemplate("superpre", params)
 	return html
 }
 

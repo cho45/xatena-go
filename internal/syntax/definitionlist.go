@@ -48,10 +48,7 @@ func (d *DefinitionListNode) ToHTML(ctx context.Context, xatena XatenaContext, o
 		})
 	}
 	params := map[string]interface{}{"Items": items}
-	html, err := xatena.ExecuteTemplate("definitionlist", params)
-	if err != nil {
-		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
-	}
+	html := xatena.ExecuteTemplate("definitionlist", params)
 	return html
 }
 
