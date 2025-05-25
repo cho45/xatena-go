@@ -98,7 +98,3 @@ func (x *Xatena) ExecuteTemplate(name string, params map[string]interface{}) str
 	}
 	return sb.String()
 }
-
-func (x *Xatena) GetBlockquoteTemplate() interface{} {
-	return nil // 必要に応じてカスタマイズ
-}
