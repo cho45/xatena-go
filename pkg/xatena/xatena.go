@@ -56,6 +56,8 @@ func (x *Xatena) GetBlockParsers() []syntax.BlockParser {
 
 // parseXatena: Xatenaインスタンスとcontext.Contextを受け取る
 func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode {
+	input = strings.ReplaceAll(input, "\r\n", "\n")
+	input = strings.ReplaceAll(input, "\r", "\n")
 	parsers := x.GetBlockParsers()
 	scanner := syntax.NewLineScanner(input)
 	root := &syntax.RootNode{}
