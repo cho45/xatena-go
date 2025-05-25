@@ -11,10 +11,14 @@ async function main() {
 		const t0 = performance.now();
 		const html = window.xatenaToHTML(src);
 		const t1 = performance.now();
-		document.getElementById("result").innerHTML = html;
 		console.log(`xatenaToHTML took ${t1 - t0} ms`);
-	}, 200));
+		const resultDiv = document.getElementById("result");
+		console.log(html)
+		resultDiv.innerHTML = html;
+		setDataTagRecursive(resultDiv);
+	}, 500));
 
+	// 初期状態を反映
 	document.getElementById("src").dispatchEvent(new Event("input"));
 }
 
@@ -27,5 +31,13 @@ function debounce(fn, delay) {
 	};
 }
 
+function setDataTagRecursive(el) {
+	if (el.nodeType === Node.ELEMENT_NODE) {
+		el.setAttribute('data-tag', el.tagName.toLowerCase());
+		for (const child of el.children) {
+			setDataTagRecursive(child);
+		}
+	}
+}
 
 main();
