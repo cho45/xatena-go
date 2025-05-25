@@ -14,6 +14,11 @@ var SectionTemplate = htmltpl.Must(htmltpl.New("section").Parse(`
 </div>
 `))
 
+var HatenaCompatibleSectionTemplate = htmltpl.Must(htmltpl.New("section").Parse(`
+<h{{.Level}}>{{.Title}}</h{{.Level}}>
+{{.Content}}
+`))
+
 var reSection = regexp.MustCompile(`^(\*+)(\s*.*)$`)
 
 // SectionNode represents a section (heading + content)

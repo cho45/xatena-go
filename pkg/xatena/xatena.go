@@ -12,18 +12,23 @@ import (
 // 今後オプションや拡張もここに集約
 
 type Xatena struct {
-	Inline    syntax.Inline
-	Templates map[string]*htmltpl.Template // テンプレート名→テンプレート
+	Inline           syntax.Inline
+	Templates        map[string]*htmltpl.Template // テンプレート名→テンプレート
+	HatenaCompatible bool                         // Hatena互換モードを使用するかどうか
 }
 
-func NewXatenaWithInline(inline syntax.Inline) *Xatena {
+func NewXatenaWithFields(inline syntax.Inline, hatenaCompatible bool) *Xatena {
+	sectionTemplate := syntax.SectionTemplate
+	if hatenaCompatible {
+		sectionTemplate = syntax.HatenaCompatibleSectionTemplate
+	}
 	return &Xatena{
 		Inline: inline,
 		Templates: map[string]*htmltpl.Template{
 			"blockquote":     syntax.BlockquoteTemplate,
 			"definitionlist": syntax.DefinitionListTemplate,
 			"list":           syntax.ListTemplate,
-			"section":        syntax.SectionTemplate,
+			"section":        sectionTemplate,
 			"table":          syntax.TableTemplate,
 			"seemore":        syntax.SeeMoreTemplate,
 			"pre":            syntax.PreTemplate,
@@ -31,7 +36,12 @@ func NewXatenaWithInline(inline syntax.Inline) *Xatena {
 			"superpre":       syntax.SuperPreTemplate,
 			"comment":        syntax.CommentTemplate,
 		},
+		HatenaCompatible: hatenaCompatible,
 	}
+}
+
+func NewXatenaWithInline(inline syntax.Inline) *Xatena {
+	return NewXatenaWithFields(inline, false)
 }
 
 func NewXatena() *Xatena {
@@ -99,4 +109,8 @@ func (x *Xatena) ExecuteTemplate(name string, params map[string]interface{}) str
 		return `<div class="xatena-template-error">template error: ` + htmltpl.HTMLEscapeString(err.Error()) + `</div>`
 	}
 	return sb.String()
+}
+
+func (x *Xatena) PreferHatenaCompatible() bool {
+	return x.HatenaCompatible
 }

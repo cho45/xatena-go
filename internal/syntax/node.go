@@ -13,6 +13,7 @@ type CallerOptions struct {
 type XatenaContext interface {
 	GetInline() Inline
 	ExecuteTemplate(name string, params map[string]interface{}) string
+	PreferHatenaCompatible() bool
 }
 
 type Node interface {
@@ -59,13 +60,62 @@ func ToHTMLParagraph(ctx context.Context, text string, xatena XatenaContext, opt
 	return html
 }
 
+func ToHTMLParagraphHatenaCompatible(ctx context.Context, text string, xatena XatenaContext, options CallerOptions) string {
+	text = xatena.GetInline().Format(ctx, text)
+	text = strings.TrimSuffix(text, "\n") // Remove trailing newline
+	if options.stopp {
+		return text
+	}
+	re := regexp.MustCompile(`(\n+)`)
+	parts := reSplitWithSep(re, text)
+
+	html := "<p>"
+	for _, para := range parts {
+		if m := regexp.MustCompile(`^(\n+)$`).FindStringSubmatch(para); m != nil {
+			brs := len(m[1]) - 2
+			if brs < 0 {
+				brs = 0
+			}
+			html += "</p>" + strings.Repeat("<br />\n", brs) + "<p>"
+		} else {
+			html += para
+		}
+	}
+	html += "</p>"
+	return html
+}
+
+//	local *Text::Xatena::Node::as_html_paragraph = sub {
+//	    my ($self, $context, $text, %opts) = @_;
+//	    $text = $context->inline->format($text, %opts);
+//
+//	    $text =~ s{\n$}{}g;
+//	    if ($opts{stopp}) {
+//	        $text;
+//	    } else {
+//	        "<p>" . join("",
+//	            map {
+//	                if (/^(\n+)$/) {
+//	                    "</p>" . ("<br />\n" x (length($1) - 2)) . "<p>";
+//	                } else {
+//	                    $_;
+//	                }
+//	            }
+//	            split(/(\n+)/, $text)
+//	        ) . "</p>\n";
+//	    }
+//	};
 func ContentToHTML(r HasContent, ctx context.Context, xatena XatenaContext, options CallerOptions) string {
 	html := ""
 	var textBuf []string
 	flushParagraph := func() {
 		hasText := strings.Join(textBuf, "") != ""
 		if hasText {
-			html += ToHTMLParagraph(ctx, strings.Join(textBuf, "\n"), xatena, options)
+			if xatena.PreferHatenaCompatible() {
+				html += ToHTMLParagraphHatenaCompatible(ctx, strings.Join(textBuf, "\n"), xatena, options)
+			} else {
+				html += ToHTMLParagraph(ctx, strings.Join(textBuf, "\n"), xatena, options)
+			}
 		}
 		textBuf = nil
 	}
