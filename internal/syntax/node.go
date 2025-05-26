@@ -40,17 +40,19 @@ func SplitForBreak(text string) []string {
 	return parts
 }
 
+var reToHTMLParagraph = regexp.MustCompile(`(\n{2,})`)
+var reToHTMLParagraphLineBreak = regexp.MustCompile(`^\n+$`)
+
 func ToHTMLParagraph(ctx context.Context, text string, xatena XatenaContext, options CallerOptions) string {
 	text = xatena.GetInline().Format(ctx, text)
 	if options.stopp {
 		return text
 	}
-	re := regexp.MustCompile(`(\n{2,})`)
-	parts := reSplitWithSep(re, text)
+	parts := reSplitWithSep(reToHTMLParagraph, text)
 
 	html := "<p>"
 	for _, para := range parts {
-		if regexp.MustCompile(`^\n+$`).MatchString(para) {
+		if reToHTMLParagraphLineBreak.MatchString(para) {
 			html += "</p>" + strings.Repeat("<br />\n", (len(para)-2)) + "<p>"
 		} else {
 			html += strings.Join(SplitForBreak(para), "<br />\n")
@@ -60,18 +62,20 @@ func ToHTMLParagraph(ctx context.Context, text string, xatena XatenaContext, opt
 	return html
 }
 
+var reToHTMLParagraphHatenaCompatible = regexp.MustCompile(`(\n+)`)
+var reToHTMLParagraphHatenaCompatibleLineBreak = regexp.MustCompile(`^(\n+)$`)
+
 func ToHTMLParagraphHatenaCompatible(ctx context.Context, text string, xatena XatenaContext, options CallerOptions) string {
 	text = xatena.GetInline().Format(ctx, text)
 	text = strings.TrimSuffix(text, "\n") // Remove trailing newline
 	if options.stopp {
 		return text
 	}
-	re := regexp.MustCompile(`(\n+)`)
-	parts := reSplitWithSep(re, text)
+	parts := reSplitWithSep(reToHTMLParagraphHatenaCompatible, text)
 
 	html := "<p>"
 	for _, para := range parts {
-		if m := regexp.MustCompile(`^(\n+)$`).FindStringSubmatch(para); m != nil {
+		if m := reToHTMLParagraphHatenaCompatibleLineBreak.FindStringSubmatch(para); m != nil {
 			brs := len(m[1]) - 2
 			if brs < 0 {
 				brs = 0

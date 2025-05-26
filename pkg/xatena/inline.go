@@ -17,6 +17,7 @@ type InlineRule struct {
 type InlineFormatter struct {
 	footnotes    []Footnote
 	rules        []InlineRule
+	bigRe        *regexp.Regexp
 	titleHandler func(ctx context.Context, uri string) string
 }
 
@@ -28,6 +29,7 @@ type Footnote struct {
 
 func (f *InlineFormatter) AddRule(rule InlineRule) {
 	f.rules = append(f.rules, rule)
+	f.bigRe = nil // Reset the big regex cache
 }
 
 func (f *InlineFormatter) AddRuleAt(index int, rule InlineRule) {
@@ -35,6 +37,7 @@ func (f *InlineFormatter) AddRuleAt(index int, rule InlineRule) {
 		index = len(f.rules)
 	}
 	f.rules = append(f.rules[:index], append([]InlineRule{rule}, f.rules[index:]...)...)
+	f.bigRe = nil // Reset the big regex cache
 }
 
 func defaultTitleHandler(ctx context.Context, uri string) string {
@@ -150,8 +153,10 @@ func (f *InlineFormatter) Format(ctx context.Context, s string) string {
 	for _, r := range f.rules {
 		patterns = append(patterns, r.Pattern.String())
 	}
-	bigRe := regexp.MustCompile(strings.Join(patterns, "|"))
-	result := bigRe.ReplaceAllStringFunc(s, func(m string) string {
+	if f.bigRe == nil {
+		f.bigRe = regexp.MustCompile(strings.Join(patterns, "|"))
+	}
+	result := f.bigRe.ReplaceAllStringFunc(s, func(m string) string {
 		for _, r := range f.rules {
 			if sub := r.Pattern.FindStringSubmatch(m); sub != nil {
 				return r.Handler(ctx, f, sub)

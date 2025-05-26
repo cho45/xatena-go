@@ -2,8 +2,8 @@ package syntax
 
 import (
 	"context"
-	htmltpl "html/template"
 	"html"
+	htmltpl "html/template"
 	"regexp"
 	"strings"
 )

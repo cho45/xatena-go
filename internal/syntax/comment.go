@@ -23,9 +23,10 @@ func (c *CommentNode) GetContent() []Node { return nil }
 
 type CommentParser struct{}
 
+var reBegin = regexp.MustCompile(`^(.*)<!--.*?(-->)?$`)
+var reEnd = regexp.MustCompile(`^-->$`)
+
 func (p *CommentParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
-	reBegin := regexp.MustCompile(`^(.*)<!--.*?(-->)?$`)
-	reEnd := regexp.MustCompile(`^-->$`)
 	if scanner.Scan(reBegin) {
 		m := scanner.Matched()
 		pre := m[1]
