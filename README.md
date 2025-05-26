@@ -95,3 +95,73 @@ go test ./pkg/xatena
 ## ライセンス
 
 MIT License
+
+---
+
+## Design Doc: xatena-go の設計概要
+
+### 全体設計
+
+xatena-go は「はてな記法」を HTML へ変換するための Go 実装です。Perl版 Text::Xatena の設計・挙動を踏襲しつつ、Goらしい型安全性・拡張性・テスト容易性を重視しています。
+
+### アーキテクチャ
+
+- **Xatena 構造体**: パース・HTML変換の中心。BlockParser群やテンプレート、インライン整形器(Inline)を保持。
+- **BlockParser インターフェース**: 各種ブロック要素(リスト、セクション、表など)ごとに実装。CanHandle/Parse メソッドで1行ずつパース。
+- **Node/HasContent インターフェース**: パース結果のツリー構造を表現。各ノードは ToHTML で自身をHTML化。
+- **Inline インターフェース**: インライン記法の整形器。Format メソッドでテキスト内のインライン要素をHTML化。
+
+#### クラス図イメージ
+
+```
+Xatena
+ ├─ Inline (interface)
+ ├─ Templates (map)
+ └─ BlockParsers ([]BlockParser)
+
+BlockParser (interface)
+ ├─ ListParser
+ ├─ SectionParser
+ ├─ ...
+
+Node (interface)
+ ├─ RootNode
+ ├─ ListNode
+ ├─ SectionNode
+ ├─ ...
+
+HasContent (interface)
+ ├─ RootNode
+ ├─ SectionNode
+ ├─ ...
+```
+
+### パースの流れ
+
+1. `Xatena#ToHTML(ctx, input)` でエントリ。
+2. `parseXatena` で入力を正規化し、LineScanner で1行ずつ走査。
+3. 各行ごとに BlockParser 群の CanHandle/Parse を順に適用。
+4. マッチしない行は TextNode として追加。
+5. Nodeツリー完成後、各ノードの ToHTML で再帰的にHTML化。
+6. インライン要素は Inline.Format で整形。
+7. テンプレートは Xatena.ExecuteTemplate で呼び出し。
+
+### 拡張性
+
+- BlockParser/Inline はインターフェース設計で差し替え・追加が容易。
+- ブロックごとのテンプレートも map で管理し、用途に応じて差し替え可能。
+- 新しい記法や出力形式の追加も最小限の実装で対応。
+
+### テンプレートによる出力
+
+- 各ブロック要素は html/template で出力を定義。
+- Xatena.Templates でテンプレートを管理し、ExecuteTemplate で呼び出し。
+- テンプレートのカスタマイズにより、HTML構造やクラス名の変更も容易。
+
+### 互換性・Hatena互換モード
+
+- `HatenaCompatible` フラグで、はてな記法の自動 p/br 挿入ルール等を切り替え。
+- Perl版 Text::Xatena の仕様・テストに準拠。
+- 既存のテストケースも移植し、互換性を担保。
+
+---
