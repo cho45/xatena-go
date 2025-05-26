@@ -94,7 +94,9 @@ func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode
 	input = normalizeNewlines(input)
 	parsers := x.GetBlockParsers()
 	scanner := syntax.NewLineScanner(input)
-	root := &syntax.RootNode{}
+	root := &syntax.RootNode{
+		Content: make([]syntax.Node, 0, 4),
+	}
 	stack := []syntax.HasContent{root}
 	for !scanner.EOF() {
 		line := scanner.Peek()
