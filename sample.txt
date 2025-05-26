@@ -1,10 +1,38 @@
 
 * はてな記法パーサー Text-Xatena
 
-てすとてすと
+てすとてすとてすとてすとてすとてすとてすとてすと
+てすとてすとてすとてすとてすとてすとてすとてすと
+
+てすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすと
+てすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすと
+てすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすとてすと
 
 [http://example.com:title] http://example.com
 
 >>
 blockquote
 <<
+
+>|javascript|
+console.log("Hello, World!")
+||<
+
+- foo
+- bar 
+-- baz
+- piyo
+
+|*foo|*bar|*baz|
+|test|test|test|
+|test|test|test|
+
+><ins><
+test ins
+></ins><
+
+:foo:
+::http://www.lowreal.net/
+:baz:
+::piyo
+::piyo
