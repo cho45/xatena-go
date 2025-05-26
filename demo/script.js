@@ -13,7 +13,6 @@ async function main() {
 		const t1 = performance.now();
 		console.log(`xatenaToHTML took ${t1 - t0} ms`);
 		const resultDiv = document.getElementById("result");
-		console.log(html)
 		resultDiv.innerHTML = html;
 		setDataTagRecursive(resultDiv);
 	}, 500));
