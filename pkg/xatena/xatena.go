@@ -64,10 +64,31 @@ func (x *Xatena) GetBlockParsers() []syntax.BlockParser {
 	}
 }
 
+// normalizeNewlines: \r\n, \r を \n に統一
+func normalizeNewlines(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	i := 0
+	for i < len(s) {
+		if s[i] == '\r' {
+			if i+1 < len(s) && s[i+1] == '\n' {
+				b.WriteByte('\n')
+				i += 2
+				continue
+			}
+			b.WriteByte('\n')
+			i++
+			continue
+		}
+		b.WriteByte(s[i])
+		i++
+	}
+	return b.String()
+}
+
 // parseXatena: Xatenaインスタンスとcontext.Contextを受け取る
 func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode {
-	input = strings.ReplaceAll(input, "\r\n", "\n")
-	input = strings.ReplaceAll(input, "\r", "\n")
+	input = normalizeNewlines(input)
 	parsers := x.GetBlockParsers()
 	scanner := syntax.NewLineScanner(input)
 	root := &syntax.RootNode{}
