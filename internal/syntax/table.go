@@ -79,7 +79,6 @@ func (p *TableParser) Parse(scanner *LineScanner, parent HasContent, stack *[]Ha
 
 	node := &TableNode{Rows: rows}
 	parent.AddChild(node)
-	*stack = append(*stack, node)
 	return true
 }
 
