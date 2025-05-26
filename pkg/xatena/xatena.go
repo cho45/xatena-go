@@ -15,6 +15,7 @@ type Xatena struct {
 	Inline           syntax.Inline
 	Templates        map[string]*htmltpl.Template // テンプレート名→テンプレート
 	HatenaCompatible bool                         // Hatena互換モードを使用するかどうか
+	blockParsers     []syntax.BlockParser         // BlockParser のキャッシュ
 }
 
 func NewXatenaWithFields(inline syntax.Inline, hatenaCompatible bool) *Xatena {
@@ -22,7 +23,7 @@ func NewXatenaWithFields(inline syntax.Inline, hatenaCompatible bool) *Xatena {
 	if hatenaCompatible {
 		sectionTemplate = syntax.HatenaCompatibleSectionTemplate
 	}
-	return &Xatena{
+	x := &Xatena{
 		Inline: inline,
 		Templates: map[string]*htmltpl.Template{
 			"blockquote":     syntax.BlockquoteTemplate,
@@ -38,6 +39,19 @@ func NewXatenaWithFields(inline syntax.Inline, hatenaCompatible bool) *Xatena {
 		},
 		HatenaCompatible: hatenaCompatible,
 	}
+	x.blockParsers = []syntax.BlockParser{
+		&syntax.SeeMoreParser{},
+		&syntax.SuperPreParser{},
+		&syntax.StopPParser{},
+		&syntax.BlockquoteParser{},
+		&syntax.PreParser{},
+		&syntax.ListParser{},
+		&syntax.DefinitionListParser{},
+		&syntax.TableParser{},
+		&syntax.SectionParser{},
+		&syntax.CommentParser{},
+	}
+	return x
 }
 
 func NewXatenaWithInline(inline syntax.Inline) *Xatena {
@@ -50,18 +64,7 @@ func NewXatena() *Xatena {
 
 // GetBlockParsers: Xatenaインスタンスを受け取る形に変更
 func (x *Xatena) GetBlockParsers() []syntax.BlockParser {
-	return []syntax.BlockParser{
-		&syntax.SeeMoreParser{},
-		&syntax.SuperPreParser{},
-		&syntax.StopPParser{},
-		&syntax.BlockquoteParser{},
-		&syntax.PreParser{},
-		&syntax.ListParser{},
-		&syntax.DefinitionListParser{},
-		&syntax.TableParser{},
-		&syntax.SectionParser{},
-		&syntax.CommentParser{},
-	}
+	return x.blockParsers
 }
 
 // normalizeNewlines: \r\n, \r を \n に統一
