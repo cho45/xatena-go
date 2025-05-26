@@ -155,6 +155,7 @@ func reSplitWithSep(re *regexp.Regexp, s string) []string {
 }
 
 type BlockParser interface {
+	CanHandle(line string) bool // パフォーマンスのためパース前に簡易的にチェックする
 	Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool
 }
 

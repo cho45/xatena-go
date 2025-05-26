@@ -4,6 +4,7 @@ import (
 	"context"
 	htmltpl "html/template"
 	"regexp"
+	"strings"
 )
 
 var SeeMoreTemplate = htmltpl.Must(htmltpl.New("seemore").Parse(`
@@ -35,6 +36,10 @@ func (s *SeeMoreNode) GetContent() []Node {
 type SeeMoreParser struct{}
 
 var reSeeMore = regexp.MustCompile(`^====(=)?$`)
+
+func (p *SeeMoreParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, "====")
+}
 
 func (p *SeeMoreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if scanner.Scan(reSeeMore) {

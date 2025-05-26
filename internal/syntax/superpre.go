@@ -45,6 +45,10 @@ type SuperPreParser struct{}
 var reSuperPreStart = regexp.MustCompile(`^>\|([^|]*)\|$`)
 var reSuperPreEnd = regexp.MustCompile(`^\|\|<$`)
 
+func (p *SuperPreParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, ">|") || strings.HasPrefix(line, "||<")
+}
+
 func (p *SuperPreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if scanner.Scan(reSuperPreStart) {
 		lang := scanner.Matched()[1]

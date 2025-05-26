@@ -4,6 +4,7 @@ import (
 	"context"
 	htmltpl "html/template"
 	"regexp"
+	"strings"
 )
 
 var PreTemplate = htmltpl.Must(htmltpl.New("pre").Parse(`
@@ -36,6 +37,10 @@ type PreParser struct{}
 
 var rePreStart = regexp.MustCompile(`^>\|$`)
 var rePreEnd = regexp.MustCompile(`^(.*?)\|<$`)
+
+func (p *PreParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, ">|") || strings.HasSuffix(line, "|<")
+}
 
 func (p *PreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if scanner.Scan(rePreStart) {

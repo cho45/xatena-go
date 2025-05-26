@@ -4,6 +4,7 @@ import (
 	"context"
 	htmltpl "html/template"
 	"regexp"
+	"strings"
 )
 
 var StopPTemplate = htmltpl.Must(htmltpl.New("stopp").Parse(`
@@ -35,6 +36,10 @@ type StopPParser struct{}
 
 var reStopPStart = regexp.MustCompile(`^>(<.+>)(<)?$`)
 var reStopPEnd = regexp.MustCompile(`^(.+>)<`)
+
+func (p *StopPParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, ">") || strings.HasSuffix(line, "<")
+}
 
 func (p *StopPParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if scanner.Scan(reStopPStart) {

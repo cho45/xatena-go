@@ -26,6 +26,10 @@ type CommentParser struct{}
 var reBegin = regexp.MustCompile(`^(.*)<!--.*?(-->)?$`)
 var reEnd = regexp.MustCompile(`^-->$`)
 
+func (p *CommentParser) CanHandle(line string) bool {
+	return true
+}
+
 func (p *CommentParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if scanner.Scan(reBegin) {
 		m := scanner.Matched()

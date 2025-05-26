@@ -97,12 +97,15 @@ func (x *Xatena) parseXatena(ctx context.Context, input string) *syntax.RootNode
 	root := &syntax.RootNode{}
 	stack := []syntax.HasContent{root}
 	for !scanner.EOF() {
+		line := scanner.Peek()
 		parent := stack[len(stack)-1]
 		matched := false
 		for _, parser := range parsers {
-			if parser.Parse(scanner, parent, &stack) {
-				matched = true
-				break
+			if parser.CanHandle(line) {
+				if parser.Parse(scanner, parent, &stack) {
+					matched = true
+					break
+				}
 			}
 		}
 		if !matched {

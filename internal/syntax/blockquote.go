@@ -75,6 +75,10 @@ type BlockquoteParser struct{}
 var reBlockquote = regexp.MustCompile(`^>([^>]+)?>$`)
 var reBlockquoteEnd = regexp.MustCompile(`^<<$`)
 
+func (p *BlockquoteParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, ">") || strings.HasPrefix(line, "<<")
+}
+
 func (p *BlockquoteParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	// BEGINNING: ^>(.*?)>$
 	if scanner.Scan(reBlockquote) {

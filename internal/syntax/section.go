@@ -21,6 +21,10 @@ var HatenaCompatibleSectionTemplate = htmltpl.Must(htmltpl.New("section").Parse(
 
 var reSection = regexp.MustCompile(`^(\*+)(\s*.*)$`)
 
+func (p *SectionParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, "*")
+}
+
 // SectionNode represents a section (heading + content)
 type SectionNode struct {
 	Level   int    // 1=*, 2=**, ...

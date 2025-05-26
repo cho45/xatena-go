@@ -4,6 +4,7 @@ import (
 	"context"
 	htmltpl "html/template"
 	"regexp"
+	"strings"
 )
 
 var DefinitionListTemplate = htmltpl.Must(htmltpl.New("definitionlist").Parse(`
@@ -19,6 +20,10 @@ var DefinitionListTemplate = htmltpl.Must(htmltpl.New("definitionlist").Parse(`
 
 var reDefinitionList = regexp.MustCompile(`^:([^:]+):(.*)$`)
 var reDefinitionListCont = regexp.MustCompile(`^::(.*)$`)
+
+func (p *DefinitionListParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, ":")
+}
 
 // DefinitionListNode represents a definition list block
 type DefinitionListNode struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	htmltpl "html/template"
 	"regexp"
+	"strings"
 )
 
 var ListTemplate = htmltpl.Must(htmltpl.New("list").Parse(`
@@ -67,6 +68,10 @@ type ListParser struct{}
 var (
 	reList = regexp.MustCompile(`^([-+]+)\s*(.+)`)
 )
+
+func (p *ListParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, "-") || strings.HasPrefix(line, "+")
+}
 
 func (p *ListParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if !scanner.Scan(reList) {

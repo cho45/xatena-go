@@ -65,6 +65,10 @@ type TableParser struct{}
 
 var reTableRow = regexp.MustCompile(`^\|`)
 
+func (p *TableParser) CanHandle(line string) bool {
+	return strings.HasPrefix(line, "|")
+}
+
 func (p *TableParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasContent) bool {
 	if !reTableRow.MatchString(scanner.Peek()) {
 		return false
