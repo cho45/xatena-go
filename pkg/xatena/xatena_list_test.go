@@ -1,7 +1,10 @@
 package xatena
 
 import (
+	"context"
 	"testing"
+
+	"github.com/cho45/xatena-go/internal/syntax"
 )
 
 const listTestData = `
@@ -159,5 +162,41 @@ func TestFormat_List_ENDStyle(t *testing.T) {
 			got := Format(input)
 			EqualHTML(t, got, expected)
 		})
+	}
+}
+
+// TestListNodeHasContent tests AddChild and GetContent methods for ListNode
+func TestListNodeHasContent(t *testing.T) {
+	x := NewXatena()
+	
+	// Parse a list to get ListNode
+	input := "- item1\n- item2"
+	root := x.parseXatena(context.Background(), input)
+	
+	if len(root.Content) == 0 {
+		t.Fatal("expected at least one node in parsed content")
+	}
+	
+	// Find the ListNode
+	var listNode *syntax.ListNode
+	for _, node := range root.Content {
+		if ln, ok := node.(*syntax.ListNode); ok {
+			listNode = ln
+			break
+		}
+	}
+	
+	if listNode == nil {
+		t.Fatal("expected to find a ListNode")
+	}
+	
+	// Test AddChild method (should not panic, but does nothing)
+	textNode := &syntax.TextNode{Text: "test"}
+	listNode.AddChild(textNode)
+	
+	// Test GetContent method (should not panic, returns nil)
+	content := listNode.GetContent()
+	if content != nil {
+		t.Errorf("expected nil content from ListNode.GetContent(), got %v", content)
 	}
 }

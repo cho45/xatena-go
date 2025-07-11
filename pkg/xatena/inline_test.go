@@ -154,3 +154,151 @@ func TestInlineFormatterFootnotesEmpty(t *testing.T) {
 		t.Errorf("expected 0 footnotes, got %d", len(footnotes))
 	}
 }
+
+// TestInlineFormatterSpecialPatterns tests patterns with low coverage
+func TestInlineFormatterSpecialPatterns(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  string
+		expect string
+	}{
+		{
+			name:   "triple parentheses pattern",
+			input:  "(((...)))",
+			expect: "((...))",
+		},
+		{
+			name:   "parentheses sandwich pattern",
+			input:  ")((...))(",
+			expect: "((...))",
+		},
+		{
+			name:   "existing a tag",
+			input:  "<a href='test'>link</a>",
+			expect: "<a href='test'>link</a>",
+		},
+		{
+			name:   "URL with barcode suffix (should not match)",
+			input:  "[http://example.com/:barcode]",
+			expect: `<img src="http://chart.apis.google.com/chart?chs=150x150&cht=qr&chl=http%3A%2F%2Fexample.com%2F" title="http://example.com/"/>`,
+		},
+		{
+			name:   "URL with title prefix (should not match simple pattern)",
+			input:  "[http://example.com/:title]",
+			expect: `<a href="http://example.com/">http://example.com/</a>`,
+		},
+		{
+			name:   "Raw URL with barcode suffix (should not match)",
+			input:  "http://example.com/:barcode",
+			expect: "http://example.com/:barcode",
+		},
+		{
+			name:   "Raw URL with title prefix (should not match)",
+			input:  "http://example.com/:title",
+			expect: `<a href="http://example.com/:title">http://example.com/:title</a>`,
+		},
+		{
+			name:   "Bracketed URL with barcode suffix (should not match)",
+			input:  "[http://example.com/:barcode]",
+			expect: `<img src="http://chart.apis.google.com/chart?chs=150x150&cht=qr&chl=http%3A%2F%2Fexample.com%2F" title="http://example.com/"/>`,
+		},
+		{
+			name:   "Bracketed URL with title prefix (should not match)",
+			input:  "[:title=something]",
+			expect: "[:title=something]",
+		},
+		{
+			name:   "HTML comment",
+			input:  "<!-- actual comment -->",
+			expect: "<!-- -->",
+		},
+		{
+			name:   "HTML tag",
+			input:  "<strong>bold</strong>",
+			expect: "<strong>bold</strong>",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			f := NewInlineFormatter()
+			got := f.Format(context.Background(), c.input)
+			if got != c.expect {
+				t.Errorf("input=%q\nexpect=%q\ngot   =%q", c.input, c.expect, got)
+			}
+		})
+	}
+}
+
+// TestInlineFormatterEmptyRules tests behavior when rules are empty
+func TestInlineFormatterEmptyRules(t *testing.T) {
+	f := &InlineFormatter{
+		footnotes:    []Footnote{},
+		rules:        []InlineRule{}, // Empty rules
+		titleHandler: defaultTitleHandler,
+	}
+	
+	// This should trigger the empty rules condition and reset to default
+	input := "((footnote))"
+	result := f.Format(context.Background(), input)
+	expected := `<a href="#fn1" title="footnote">*1</a>`
+	if result != expected {
+		t.Errorf("empty rules test: expected %q, got %q", expected, result)
+	}
+	
+	// Verify that rules were set
+	if len(f.rules) == 0 {
+		t.Error("expected rules to be set after Format call")
+	}
+}
+
+// TestInlineFormatterNoMatch tests pattern that doesn't match any rule
+func TestInlineFormatterNoMatch(t *testing.T) {
+	f := NewInlineFormatter()
+	
+	// Create a custom rule that won't match anything in our test
+	customRule := InlineRule{
+		Pattern: regexp.MustCompile(`\[nomatch:(.+?)\]`),
+		Handler: func(ctx context.Context, f *InlineFormatter, m []string) string {
+			return "<nomatch>" + m[1] + "</nomatch>"
+		},
+	}
+	
+	// Clear existing rules and add only our custom rule
+	f.rules = []InlineRule{customRule}
+	f.bigRe = nil // Reset cache
+	
+	// Test with input that matches the pattern but handler returns original
+	input := "[nomatch:test]"
+	result := f.Format(context.Background(), input)
+	expected := "<nomatch>test</nomatch>"
+	if result != expected {
+		t.Errorf("custom rule test: expected %q, got %q", expected, result)
+	}
+	
+	// Test with input that doesn't match any pattern
+	input2 := "normal text"
+	result2 := f.Format(context.Background(), input2)
+	expected2 := "normal text"
+	if result2 != expected2 {
+		t.Errorf("no match test: expected %q, got %q", expected2, result2)
+	}
+}
+
+// TestInlineFormatterSetTitleHandler tests title handler functionality
+func TestInlineFormatterSetTitleHandler(t *testing.T) {
+	f := NewInlineFormatter()
+	
+	// Set custom title handler
+	f.SetTitleHandler(func(ctx context.Context, uri string) string {
+		return "Custom Title"
+	})
+	
+	// Test with title option that uses title handler
+	input := "[http://example.com/:title]"
+	result := f.Format(context.Background(), input)
+	expected := `<a href="http://example.com/">Custom Title</a>`
+	if result != expected {
+		t.Errorf("title handler test: expected %q, got %q", expected, result)
+	}
+}

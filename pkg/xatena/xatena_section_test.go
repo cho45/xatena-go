@@ -2,6 +2,8 @@ package xatena
 
 import (
 	"testing"
+
+	"github.com/cho45/xatena-go/internal/syntax"
 )
 
 const sectionTestData = `
@@ -165,5 +167,17 @@ func TestFormat_Section_ENDStyle(t *testing.T) {
 			got := Format(input)
 			EqualHTML(t, got, expected)
 		})
+	}
+}
+
+// TestSectionTitleNodeGetContent tests GetContent method for SectionTitleNode
+func TestSectionTitleNodeGetContent(t *testing.T) {
+	// Create a SectionTitleNode directly
+	titleNode := &syntax.SectionTitleNode{}
+	
+	// Test GetContent method (should not panic, returns nil)
+	content := titleNode.GetContent()
+	if content != nil {
+		t.Errorf("expected nil content from SectionTitleNode.GetContent(), got %v", content)
 	}
 }
