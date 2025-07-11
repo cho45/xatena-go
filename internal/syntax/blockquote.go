@@ -41,8 +41,7 @@ func (b *BlockquoteNode) ToHTML(ctx context.Context, xatena XatenaContext, optio
 		} else {
 			title = xatena.GetInline().Format(ctx, citeText)
 		}
-		re := regexp.MustCompile(`href="([^"]+)"`)
-		if m := re.FindStringSubmatch(title); m != nil {
+		if m := reHref.FindStringSubmatch(title); m != nil {
 			uri = m[1]
 		} else if isURL(citeText) {
 			uri = citeText
@@ -74,6 +73,7 @@ type BlockquoteParser struct{}
 
 var reBlockquote = regexp.MustCompile(`^>([^>]+)?>$`)
 var reBlockquoteEnd = regexp.MustCompile(`^<<$`)
+var reHref = regexp.MustCompile(`href="([^"]+)"`)
 
 func (p *BlockquoteParser) CanHandle(line string) bool {
 	return strings.HasPrefix(line, ">") || strings.HasPrefix(line, "<<")
