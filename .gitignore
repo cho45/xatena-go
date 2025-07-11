@@ -1,3 +1,4 @@
 Text-Xatena
 xatena-cli
 .vscode
+coverage*
