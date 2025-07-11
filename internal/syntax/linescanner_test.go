@@ -302,3 +302,156 @@ func TestLineScanner_SingleLine(t *testing.T) {
 		t.Error("EOF() should return true after consuming single line")
 	}
 }
+
+// TestLineScannerEdgeCases tests various edge cases for complete coverage
+func TestLineScannerEdgeCases(t *testing.T) {
+	t.Run("Peek after EOF", func(t *testing.T) {
+		scanner := NewLineScanner("line1")
+		
+		// Consume the line
+		scanner.Next()
+		
+		// EOF should be true
+		if !scanner.EOF() {
+			t.Error("Expected EOF to be true after consuming all lines")
+		}
+		
+		// Peek after EOF should return empty string
+		result := scanner.Peek()
+		if result != "" {
+			t.Errorf("Peek after EOF expected empty string, got %q", result)
+		}
+	})
+	
+	t.Run("Peek on empty scanner", func(t *testing.T) {
+		scanner := NewLineScanner("")
+		
+		// Empty string creates one empty line, so not at EOF yet
+		if scanner.EOF() {
+			t.Error("Expected EOF to be false for empty input (creates one empty line)")
+		}
+		
+		// Peek should return empty string (the empty line)
+		result := scanner.Peek()
+		if result != "" {
+			t.Errorf("Peek on empty scanner expected empty string, got %q", result)
+		}
+		
+		// After consuming the empty line, should be at EOF
+		scanner.Next()
+		if !scanner.EOF() {
+			t.Error("Expected EOF to be true after consuming empty line")
+		}
+		
+		// Peek after EOF should return empty string
+		result = scanner.Peek()
+		if result != "" {
+			t.Errorf("Peek after EOF expected empty string, got %q", result)
+		}
+	})
+	
+	t.Run("Scan with no match sets matched to nil", func(t *testing.T) {
+		scanner := NewLineScanner("no match here")
+		
+		// Set up a pattern that won't match
+		pattern := regexp.MustCompile(`^NOMATCH`)
+		
+		// This should return false and set matched to nil
+		result := scanner.Scan(pattern)
+		if result {
+			t.Error("Expected Scan to return false for non-matching pattern")
+		}
+		
+		// matched should be nil
+		matched := scanner.Matched()
+		if matched != nil {
+			t.Errorf("Expected matched to be nil after failed scan, got %v", matched)
+		}
+		
+		// Position should not advance
+		if scanner.pos != 0 {
+			t.Errorf("Expected position to remain 0 after failed scan, got %d", scanner.pos)
+		}
+	})
+	
+	t.Run("Scan at EOF", func(t *testing.T) {
+		scanner := NewLineScanner("single line")
+		
+		// Consume the line
+		scanner.Next()
+		
+		// Try to scan at EOF
+		pattern := regexp.MustCompile(`.*`)
+		result := scanner.Scan(pattern)
+		if result {
+			t.Error("Expected Scan to return false at EOF")
+		}
+	})
+	
+	t.Run("SetLines functionality", func(t *testing.T) {
+		scanner := NewLineScanner("original")
+		
+		// Advance position
+		scanner.Next()
+		if scanner.pos != 1 {
+			t.Errorf("Expected position 1 after Next(), got %d", scanner.pos)
+		}
+		
+		// SetLines should reset position to 0
+		newLines := []string{"new1", "new2", "new3"}
+		scanner.SetLines(newLines)
+		
+		if scanner.pos != 0 {
+			t.Errorf("Expected position 0 after SetLines, got %d", scanner.pos)
+		}
+		
+		// Check that lines were set correctly
+		for i, expected := range newLines {
+			if scanner.lines[i] != expected {
+				t.Errorf("Expected lines[%d] = %q, got %q", i, expected, scanner.lines[i])
+			}
+		}
+		
+		// Verify functionality with new lines
+		line := scanner.Peek()
+		if line != "new1" {
+			t.Errorf("Expected Peek to return 'new1', got %q", line)
+		}
+	})
+	
+	t.Run("Reset functionality", func(t *testing.T) {
+		scanner := NewLineScanner("line1\nline2\nline3")
+		
+		// Advance to position 2
+		scanner.Next()
+		scanner.Next()
+		if scanner.pos != 2 {
+			t.Errorf("Expected position 2, got %d", scanner.pos)
+		}
+		
+		// Reset to position 1
+		scanner.Reset(1)
+		if scanner.pos != 1 {
+			t.Errorf("Expected position 1 after Reset(1), got %d", scanner.pos)
+		}
+		
+		// Verify current line
+		line := scanner.Peek()
+		if line != "line2" {
+			t.Errorf("Expected current line to be 'line2', got %q", line)
+		}
+	})
+	
+	t.Run("Pos method", func(t *testing.T) {
+		scanner := NewLineScanner("line1\nline2")
+		
+		if scanner.Pos() != 0 {
+			t.Errorf("Expected initial position 0, got %d", scanner.Pos())
+		}
+		
+		scanner.Next()
+		if scanner.Pos() != 1 {
+			t.Errorf("Expected position 1 after Next(), got %d", scanner.Pos())
+		}
+	})
+}
