@@ -52,7 +52,10 @@ func (p *PreParser) Parse(scanner *LineScanner, parent HasContent, stack *[]HasC
 	if scanner.Scan(rePreEnd) {
 		m := scanner.Matched()
 		parent.AddChild(&TextNode{Text: m[1]})
-		if len(*stack) == 0 {
+		if len(*stack) <= 1 {
+			return false
+		}
+		if _, ok := (*stack)[len(*stack)-1].(*PreNode); !ok {
 			return false
 		}
 		*stack = (*stack)[:len(*stack)-1]

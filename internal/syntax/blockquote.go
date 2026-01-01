@@ -94,15 +94,18 @@ func (p *BlockquoteParser) Parse(scanner *LineScanner, parent HasContent, stack 
 	}
 	// ENDOFNODE: ^<<$
 	if scanner.Scan(reBlockquoteEnd) {
-		// Sectionノードを飛ばしてpop
-		for len(*stack) > 0 {
+		// Sectionノードを飛ばしてpop, ただし RootNode は残す
+		for len(*stack) > 1 {
 			if _, ok := (*stack)[len(*stack)-1].(*SectionNode); ok {
 				*stack = (*stack)[:len(*stack)-1]
 			} else {
 				break
 			}
 		}
-		if len(*stack) == 0 {
+		if len(*stack) <= 1 {
+			return false
+		}
+		if _, ok := (*stack)[len(*stack)-1].(*BlockquoteNode); !ok {
 			return false
 		}
 		*stack = (*stack)[:len(*stack)-1]

@@ -53,6 +53,12 @@ func (p *StopPParser) Parse(scanner *LineScanner, parent HasContent, stack *[]Ha
 	}
 
 	if scanner.Scan(reStopPEnd) {
+		if len(*stack) <= 1 {
+			return false
+		}
+		if _, ok := (*stack)[len(*stack)-1].(*StopPNode); !ok {
+			return false
+		}
 		lastParent := (*stack)[len(*stack)-1]
 		*stack = (*stack)[:len(*stack)-1]
 		lastParent.AddChild(&TextNode{Text: scanner.Matched()[1]})
