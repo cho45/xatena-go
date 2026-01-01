@@ -4,6 +4,7 @@ import (
 	"context"
 	htmltpl "html/template"
 	"regexp"
+	"strings"
 )
 
 var CommentTemplate = htmltpl.Must(htmltpl.New("comment").Parse(`
@@ -23,8 +24,7 @@ func (c *CommentNode) GetContent() []Node { return nil }
 
 type CommentParser struct{}
 
-var reBegin = regexp.MustCompile(`^(.*)<!--.*?(-->)?$`)
-var reEnd = regexp.MustCompile(`^-->$`)
+var reBegin = regexp.MustCompile(`^(.*)<!--(.*)$`)
 
 func (p *CommentParser) CanHandle(line string) bool {
 	return true
@@ -34,12 +34,25 @@ func (p *CommentParser) Parse(scanner *LineScanner, parent HasContent, stack *[]
 	if scanner.Scan(reBegin) {
 		m := scanner.Matched()
 		pre := m[1]
+		rest := m[2]
+
 		if pre != "" {
 			parent.AddChild(&TextNode{Text: pre})
 		}
-		if m[2] == "" {
-			scanner.ScanUntil(reEnd)
+
+		// Consume until "-->"
+		if strings.Contains(rest, "-->") {
+			// Ends on the same line
+		} else {
+			// Scan until "-->" or EOF
+			for !scanner.EOF() {
+				line := scanner.Next()
+				if strings.Contains(line, "-->") {
+					break
+				}
+			}
 		}
+
 		parent.AddChild(&CommentNode{})
 		return true
 	}
