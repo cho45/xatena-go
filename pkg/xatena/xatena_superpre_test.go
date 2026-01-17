@@ -100,15 +100,15 @@ func TestFormat_SuperPre_ENDStyle(t *testing.T) {
 // TestSuperPreNodeHasContent tests AddChild and GetContent methods for SuperPreNode
 func TestSuperPreNodeHasContent(t *testing.T) {
 	x := NewXatena()
-	
+
 	// Parse a superpre to get SuperPreNode
 	input := ">||\ncode\n||<"
 	root := x.parseXatena(context.Background(), input)
-	
+
 	if len(root.Content) == 0 {
 		t.Fatal("expected at least one node in parsed content")
 	}
-	
+
 	// Find the SuperPreNode
 	var superPreNode *syntax.SuperPreNode
 	for _, node := range root.Content {
@@ -117,15 +117,15 @@ func TestSuperPreNodeHasContent(t *testing.T) {
 			break
 		}
 	}
-	
+
 	if superPreNode == nil {
 		t.Fatal("expected to find a SuperPreNode")
 	}
-	
+
 	// Test AddChild method (should not panic, but does nothing)
 	textNode := &syntax.TextNode{Text: "test"}
 	superPreNode.AddChild(textNode)
-	
+
 	// Test GetContent method (should not panic, returns nil)
 	content := superPreNode.GetContent()
 	if content != nil {

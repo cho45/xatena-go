@@ -67,7 +67,7 @@ func TestInlineFormatter_Format(t *testing.T) {
 // TestInlineFormatterAddRuleAt tests AddRuleAt functionality
 func TestInlineFormatterAddRuleAt(t *testing.T) {
 	f := NewInlineFormatter()
-	
+
 	// Define a custom rule
 	customRule := InlineRule{
 		Pattern: regexp.MustCompile(`\[test:(.+?)\]`),
@@ -75,7 +75,7 @@ func TestInlineFormatterAddRuleAt(t *testing.T) {
 			return "<test>" + m[1] + "</test>"
 		},
 	}
-	
+
 	// Test adding at the beginning (index 0)
 	f.AddRuleAt(0, customRule)
 	result := f.Format(context.Background(), "[test:content]")
@@ -83,7 +83,7 @@ func TestInlineFormatterAddRuleAt(t *testing.T) {
 	if result != expected {
 		t.Errorf("AddRuleAt(0): expected %q, got %q", expected, result)
 	}
-	
+
 	// Test adding at invalid negative index (should append)
 	f2 := NewInlineFormatter()
 	f2.AddRuleAt(-1, customRule)
@@ -92,7 +92,7 @@ func TestInlineFormatterAddRuleAt(t *testing.T) {
 	if result2 != expected2 {
 		t.Errorf("AddRuleAt(-1): expected %q, got %q", expected2, result2)
 	}
-	
+
 	// Test adding at index beyond length (should append)
 	f3 := NewInlineFormatter()
 	f3.AddRuleAt(100, customRule)
@@ -106,32 +106,32 @@ func TestInlineFormatterAddRuleAt(t *testing.T) {
 // TestInlineFormatterFootnotes tests Footnotes functionality
 func TestInlineFormatterFootnotes(t *testing.T) {
 	f := NewInlineFormatter()
-	
+
 	// Test with input containing footnotes
 	input := "テキスト((脚注内容))とさらに((別の脚注))"
 	output := f.Format(context.Background(), input)
-	
+
 	// Get footnotes
 	footnotes := f.Footnotes()
-	
+
 	// We expect 2 footnotes
 	if len(footnotes) != 2 {
 		t.Errorf("expected 2 footnotes, got %d", len(footnotes))
 	}
-	
+
 	// Verify footnotes are captured correctly
 	if len(footnotes) >= 1 {
 		if footnotes[0].Note != "脚注内容" {
 			t.Errorf("expected first footnote note to be '脚注内容', got %q", footnotes[0].Note)
 		}
 	}
-	
+
 	if len(footnotes) >= 2 {
 		if footnotes[1].Note != "別の脚注" {
 			t.Errorf("expected second footnote note to be '別の脚注', got %q", footnotes[1].Note)
 		}
 	}
-	
+
 	// Test that footnotes are included in output
 	if !strings.Contains(output, "脚注内容") && !strings.Contains(output, "別の脚注") {
 		t.Errorf("expected output to contain footnote content, got %q", output)
@@ -141,14 +141,14 @@ func TestInlineFormatterFootnotes(t *testing.T) {
 // TestInlineFormatterFootnotesEmpty tests Footnotes with no footnotes
 func TestInlineFormatterFootnotesEmpty(t *testing.T) {
 	f := NewInlineFormatter()
-	
+
 	// Test with input containing no footnotes
 	input := "普通のテキスト"
 	f.Format(context.Background(), input)
-	
+
 	// Get footnotes
 	footnotes := f.Footnotes()
-	
+
 	// We expect 0 footnotes
 	if len(footnotes) != 0 {
 		t.Errorf("expected 0 footnotes, got %d", len(footnotes))
@@ -237,7 +237,7 @@ func TestInlineFormatterEmptyRules(t *testing.T) {
 		rules:        []InlineRule{}, // Empty rules
 		titleHandler: defaultTitleHandler,
 	}
-	
+
 	// This should trigger the empty rules condition and reset to default
 	input := "((footnote))"
 	result := f.Format(context.Background(), input)
@@ -245,7 +245,7 @@ func TestInlineFormatterEmptyRules(t *testing.T) {
 	if result != expected {
 		t.Errorf("empty rules test: expected %q, got %q", expected, result)
 	}
-	
+
 	// Verify that rules were set
 	if len(f.rules) == 0 {
 		t.Error("expected rules to be set after Format call")
@@ -255,7 +255,7 @@ func TestInlineFormatterEmptyRules(t *testing.T) {
 // TestInlineFormatterNoMatch tests pattern that doesn't match any rule
 func TestInlineFormatterNoMatch(t *testing.T) {
 	f := NewInlineFormatter()
-	
+
 	// Create a custom rule that won't match anything in our test
 	customRule := InlineRule{
 		Pattern: regexp.MustCompile(`\[nomatch:(.+?)\]`),
@@ -263,11 +263,11 @@ func TestInlineFormatterNoMatch(t *testing.T) {
 			return "<nomatch>" + m[1] + "</nomatch>"
 		},
 	}
-	
+
 	// Clear existing rules and add only our custom rule
 	f.rules = []InlineRule{customRule}
 	f.bigRe = nil // Reset cache
-	
+
 	// Test with input that matches the pattern but handler returns original
 	input := "[nomatch:test]"
 	result := f.Format(context.Background(), input)
@@ -275,7 +275,7 @@ func TestInlineFormatterNoMatch(t *testing.T) {
 	if result != expected {
 		t.Errorf("custom rule test: expected %q, got %q", expected, result)
 	}
-	
+
 	// Test with input that doesn't match any pattern
 	input2 := "normal text"
 	result2 := f.Format(context.Background(), input2)
@@ -288,12 +288,12 @@ func TestInlineFormatterNoMatch(t *testing.T) {
 // TestInlineFormatterSetTitleHandler tests title handler functionality
 func TestInlineFormatterSetTitleHandler(t *testing.T) {
 	f := NewInlineFormatter()
-	
+
 	// Set custom title handler
 	f.SetTitleHandler(func(ctx context.Context, uri string) string {
 		return "Custom Title"
 	})
-	
+
 	// Test with title option that uses title handler
 	input := "[http://example.com/:title]"
 	result := f.Format(context.Background(), input)

@@ -70,18 +70,18 @@ func defaultInlineRules(f *InlineFormatter) []InlineRule {
 			Pattern: regexp.MustCompile(`\)\(\(.*?\)\)\(`),
 			Handler: func(ctx context.Context, f *InlineFormatter, m []string) string { return m[0][1 : len(m[0])-1] },
 		},
-								{
-									Pattern: regexp.MustCompile(`\(\((.+?)\)\)`),
-									Handler: func(ctx context.Context, f *InlineFormatter, m []string) string {
-										note := m[1]
-										// Recursive format to handle inline notations within footnote
-										formattedNote := f.Format(ctx, note)
-										// Strip tags for the title attribute to match old implementation
-										titleText := stripTags(formattedNote)
-										f.footnotes = append(f.footnotes, Footnote{Number: len(f.footnotes) + 1, Note: note, Title: formattedNote})
-										return fmt.Sprintf(`<a href="#fn%d" title="%s">*%d</a>`, len(f.footnotes), html.EscapeString(titleText), len(f.footnotes))
-									},
-								},		{
+		{
+			Pattern: regexp.MustCompile(`\(\((.+?)\)\)`),
+			Handler: func(ctx context.Context, f *InlineFormatter, m []string) string {
+				note := m[1]
+				// Recursive format to handle inline notations within footnote
+				formattedNote := f.Format(ctx, note)
+				// Strip tags for the title attribute to match old implementation
+				titleText := stripTags(formattedNote)
+				f.footnotes = append(f.footnotes, Footnote{Number: len(f.footnotes) + 1, Note: note, Title: formattedNote})
+				return fmt.Sprintf(`<a href="#fn%d" title="%s">*%d</a>`, len(f.footnotes), html.EscapeString(titleText), len(f.footnotes))
+			},
+		}, {
 			Pattern: regexp.MustCompile(`(?i)<a[^>]+>[\s\S]*?</a>`),
 			Handler: func(ctx context.Context, f *InlineFormatter, m []string) string { return m[0] },
 		},

@@ -174,7 +174,7 @@ func TestFormat_Section_ENDStyle(t *testing.T) {
 func TestSectionTitleNodeGetContent(t *testing.T) {
 	// Create a SectionTitleNode directly
 	titleNode := &syntax.SectionTitleNode{}
-	
+
 	// Test GetContent method (should not panic, returns nil)
 	content := titleNode.GetContent()
 	if content != nil {

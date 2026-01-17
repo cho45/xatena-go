@@ -71,7 +71,7 @@ func TestNormalizeNewlines(t *testing.T) {
 			expected: "line1\nline2",
 		},
 		{
-			name:     "CR to LF", 
+			name:     "CR to LF",
 			input:    "line1\rline2",
 			expected: "line1\nline2",
 		},
@@ -151,11 +151,11 @@ func TestExecuteTemplateSuccess(t *testing.T) {
 		"Content": "test content",
 	}
 	result := x.ExecuteTemplate("pre", params)
-	
+
 	if strings.Contains(result, "xatena-template-error") {
 		t.Errorf("successful template execution should not contain error, got %q", result)
 	}
-	
+
 	if !strings.Contains(result, "test content") {
 		t.Errorf("expected result to contain 'test content', got %q", result)
 	}
